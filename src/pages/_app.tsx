@@ -16,7 +16,6 @@ const App: AppType<{ session: Session | null }> = ({
     <>
       <Head>
         <title>Scrum Poker</title>
-        <link rel="icon" href="/favicon.ico" />
       </Head>
       <SessionProvider session={session}>
         <Component {...pageProps} />
