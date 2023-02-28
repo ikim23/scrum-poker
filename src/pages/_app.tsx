@@ -4,7 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import Head from "next/head";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-import { api } from "~/utils/api";
+import { trpc } from "~/utils/trpc";
 
 import "~/styles/globals.css";
 
@@ -26,4 +26,4 @@ const App: AppType<{ session: Session | null }> = ({
   );
 };
 
-export default api.withTRPC(App);
+export default trpc.withTRPC(App);

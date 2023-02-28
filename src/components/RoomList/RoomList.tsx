@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { RouterOutputs } from "~/utils/api";
+import { RouterOutputs } from "~/utils/trpc";
 import { FiExternalLink } from "react-icons/fi";
 
 type RoomListProps = {

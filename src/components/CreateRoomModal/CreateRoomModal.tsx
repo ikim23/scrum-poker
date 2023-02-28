@@ -1,6 +1,6 @@
 import { Button, Label, Modal, Spinner, TextInput } from "flowbite-react";
 import { useState, FormEventHandler } from "react";
-import { api } from "~/utils/api";
+import { trpc } from "~/utils/trpc";
 import { RenderOnClient } from "../RenderOnClient/RenderOnClient";
 
 type CreateRoomModalProps = {
@@ -11,7 +11,7 @@ type CreateRoomModalProps = {
 export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
   const [name, setName] = useState("");
   const [nameErrorMessage, setNameErrorMessage] = useState("");
-  const createRoom = api.room.createRoom.useMutation();
+  const createRoom = trpc.room.createRoom.useMutation();
 
   const validate = (nextName: string) => {
     if (!nextName) {

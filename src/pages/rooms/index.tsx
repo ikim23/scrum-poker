@@ -1,13 +1,13 @@
 import { Layout } from "~/components/Layout/Layout";
-import { api } from "~/utils/api";
+import { trpc } from "~/utils/trpc";
 import { Button, Spinner } from "flowbite-react";
 import { RoomList } from "~/components/RoomList/RoomList";
 import { CreateRoomModal } from "~/components/CreateRoomModal/CreateRoomModal";
 import { useState } from "react";
 
 export default function Rooms() {
-  const trpcContext = api.useContext();
-  const rooms = api.room.getRooms.useQuery();
+  const trpcContext = trpc.useContext();
+  const rooms = trpc.room.getRooms.useQuery();
   const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState(false);
 
   return (
