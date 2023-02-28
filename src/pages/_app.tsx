@@ -2,6 +2,7 @@ import { type AppType } from "next/app";
 import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import Head from "next/head";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import { api } from "~/utils/api";
 
@@ -20,6 +21,7 @@ const App: AppType<{ session: Session | null }> = ({
       <SessionProvider session={session}>
         <Component {...pageProps} />
       </SessionProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
     </>
   );
 };
