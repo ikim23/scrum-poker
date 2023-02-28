@@ -1,9 +1,14 @@
 import { Button } from "flowbite-react";
+import { useRouter } from "next/router";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { PropsWithChildren } from "react";
 
 export function Layout({ children }: PropsWithChildren) {
+  const router = useRouter();
   const session = useSession();
+
+  const callbackUrl =
+    (router.query.callbackUrl as string | undefined) ?? "/rooms";
 
   return (
     <main className="min-h-screen bg-gray-900">
@@ -25,7 +30,7 @@ export function Layout({ children }: PropsWithChildren) {
           <Button
             className="min-w-[180px]"
             onClick={() => {
-              void signIn("google", { callbackUrl: "/rooms" });
+              void signIn("google", { callbackUrl });
             }}
           >
             Sign in with Google
