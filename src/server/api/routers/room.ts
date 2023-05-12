@@ -16,7 +16,7 @@ export const roomRouter = createTRPCRouter({
         data: {
           roomId: await nanoid(),
           name,
-          createdBy: user.email!,
+          createdBy: user.email,
         },
       });
 
@@ -24,7 +24,7 @@ export const roomRouter = createTRPCRouter({
     }),
   getRooms: protectedProcedure.query(async ({ ctx: { user, prisma } }) => {
     const rooms = await prisma.room.findMany({
-      where: { createdBy: user.email! },
+      where: { createdBy: user.email },
     });
 
     return rooms;
@@ -37,7 +37,7 @@ export const roomRouter = createTRPCRouter({
     )
     .mutation(async ({ input: { roomId }, ctx: { user, prisma } }) => {
       const { count } = await prisma.room.deleteMany({
-        where: { AND: [{ createdBy: user.email! }, { roomId }] },
+        where: { AND: [{ createdBy: user.email }, { roomId }] },
       });
 
       return count > 0;
@@ -50,10 +50,10 @@ export const roomRouter = createTRPCRouter({
     )
     .mutation(async ({ input: { roomId }, ctx: { user, prisma } }) => {
       await prisma.roomUser.upsert({
-        where: { roomId_user: { roomId, user: user.email! } },
+        where: { roomId_user: { roomId, user: user.email } },
         create: {
           roomId,
-          user: user.email!,
+          user: user.email,
         },
         update: {},
       });
