@@ -15,7 +15,7 @@ export function RoomList({ rooms }: RoomListProps) {
   return (
     <ul className="list-inside list-disc">
       {rooms.map((room) => (
-        <li key={room.roomId} className="my-2 ">
+        <li className="my-2 " key={room.roomId}>
           <Link className="inline-block" href={`/rooms/${room.roomId}`}>
             <div className="flex items-center gap-1">
               <span>{room.name}</span>

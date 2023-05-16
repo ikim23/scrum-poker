@@ -8,8 +8,8 @@ import { type AppRouter } from '~/server/api/root'
 export const trpc = createTRPCNext<AppRouter>({
   config() {
     return {
-      transformer: superjson,
       links: [httpBatchLink({ url: '/api/trpc' })],
+      transformer: superjson,
     }
   },
   ssr: false,

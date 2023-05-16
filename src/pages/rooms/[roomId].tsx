@@ -9,7 +9,7 @@ export default function Room() {
       <div className="flex">
         <div className="inline-grid grid-cols-3 gap-4">
           {VALUES.map((value) => (
-            <Card key={value} value={value} onClick={() => {}} />
+            <Card key={value} onClick={() => {}} value={value} />
           ))}
         </div>
         <div className="ml-auto">

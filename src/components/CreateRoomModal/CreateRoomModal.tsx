@@ -1,4 +1,4 @@
-import { Button, Label, Modal, Spinner, TextInput } from 'flowbite-react'
+import { Button, Label, Modal, TextInput } from 'flowbite-react'
 import { type FormEventHandler, useState } from 'react'
 
 import { trpc } from '~/utils/trpc'
@@ -49,7 +49,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
 
   return (
     <RenderOnClient>
-      <Modal show={isOpen} onClose={handleClose} position="center">
+      <Modal onClose={handleClose} position="center" show={isOpen}>
         <Modal.Header className="bg-gray-500">Create Room</Modal.Header>
         <form noValidate onSubmit={handleSubmit}>
           <Modal.Body className="bg-gray-500">
@@ -57,19 +57,19 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
               <Label htmlFor="name">Name</Label>
             </div>
             <TextInput
+              color={nameErrorMessage ? 'failure' : undefined}
+              helperText={nameErrorMessage}
               id="name"
-              type="text"
-              required
-              value={name}
+              onBlur={() => {
+                validate(name)
+              }}
               onChange={(event) => {
                 setName(event.target.value)
                 validate(event.target.value)
               }}
-              onBlur={() => {
-                validate(name)
-              }}
-              color={nameErrorMessage ? 'failure' : undefined}
-              helperText={nameErrorMessage}
+              required
+              type="text"
+              value={name}
             />
           </Modal.Body>
           <Modal.Footer className="bg-gray-500">
