@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useState } from 'react'
+import { type PropsWithChildren, useEffect, useState } from 'react'
 
 export function RenderOnClient({ children }: PropsWithChildren) {
   const [isClient, setIsClient] = useState(false)

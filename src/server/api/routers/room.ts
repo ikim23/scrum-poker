@@ -1,8 +1,8 @@
 import { TRPCError } from '@trpc/server'
-import { z } from '~/utils/zod'
 import { nanoid } from 'nanoid/async'
 
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
+import { z } from '~/utils/zod'
 
 export const roomRouter = createTRPCRouter({
   createRoom: protectedProcedure

@@ -1,9 +1,10 @@
-import { Layout } from '~/components/Layout/Layout'
-import { trpc } from '~/utils/trpc'
 import { Button, Spinner } from 'flowbite-react'
-import { RoomList } from '~/components/RoomList/RoomList'
-import { CreateRoomModal } from '~/components/CreateRoomModal/CreateRoomModal'
 import { useState } from 'react'
+
+import { CreateRoomModal } from '~/components/CreateRoomModal/CreateRoomModal'
+import { Layout } from '~/components/Layout/Layout'
+import { RoomList } from '~/components/RoomList/RoomList'
+import { trpc } from '~/utils/trpc'
 
 export default function Rooms() {
   const trpcContext = trpc.useContext()

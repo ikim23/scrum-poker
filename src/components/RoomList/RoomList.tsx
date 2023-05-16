@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { RouterOutputs } from '~/utils/trpc'
 import { FiExternalLink } from 'react-icons/fi'
+
+import { type RouterOutputs } from '~/utils/trpc'
 
 type RoomListProps = {
   rooms: RouterOutputs['room']['getRooms']

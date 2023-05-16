@@ -1,6 +1,8 @@
 import { Button, Label, Modal, Spinner, TextInput } from 'flowbite-react'
-import { useState, FormEventHandler } from 'react'
+import { type FormEventHandler, useState } from 'react'
+
 import { trpc } from '~/utils/trpc'
+
 import { RenderOnClient } from '../RenderOnClient/RenderOnClient'
 
 type CreateRoomModalProps = {

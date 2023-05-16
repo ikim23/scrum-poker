@@ -1,4 +1,5 @@
 import Pusher from 'pusher'
+
 import { env } from '~/env.mjs'
 
 const globalForPusher = globalThis as unknown as { pusher: Pusher }
