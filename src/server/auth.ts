@@ -1,7 +1,7 @@
-import { type GetServerSidePropsContext } from "next";
-import { getServerSession, type NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import { env } from "~/env.mjs";
+import { type GetServerSidePropsContext } from 'next'
+import { getServerSession, type NextAuthOptions } from 'next-auth'
+import GoogleProvider from 'next-auth/providers/google'
+import { env } from '~/env.mjs'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -11,13 +11,13 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: "/",
+    signIn: '/',
   },
-};
+}
 
 export const getServerAuthSession = (ctx: {
-  req: GetServerSidePropsContext["req"];
-  res: GetServerSidePropsContext["res"];
+  req: GetServerSidePropsContext['req']
+  res: GetServerSidePropsContext['res']
 }) => {
-  return getServerSession(ctx.req, ctx.res, authOptions);
-};
+  return getServerSession(ctx.req, ctx.res, authOptions)
+}

@@ -1,7 +1,7 @@
-import { Card } from "~/components/Card/Card";
-import { Layout } from "~/components/Layout/Layout";
+import { Card } from '~/components/Card/Card'
+import { Layout } from '~/components/Layout/Layout'
 
-const VALUES = ["1", "2", "3", "5", "8", "13", "20", "40", "100"];
+const VALUES = ['1', '2', '3', '5', '8', '13', '20', '40', '100']
 
 export default function Room() {
   return (
@@ -22,5 +22,5 @@ export default function Room() {
         </div>
       </div>
     </Layout>
-  );
+  )
 }

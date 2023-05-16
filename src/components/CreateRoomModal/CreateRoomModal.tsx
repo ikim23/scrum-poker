@@ -1,49 +1,49 @@
-import { Button, Label, Modal, Spinner, TextInput } from "flowbite-react";
-import { useState, FormEventHandler } from "react";
-import { trpc } from "~/utils/trpc";
-import { RenderOnClient } from "../RenderOnClient/RenderOnClient";
+import { Button, Label, Modal, Spinner, TextInput } from 'flowbite-react'
+import { useState, FormEventHandler } from 'react'
+import { trpc } from '~/utils/trpc'
+import { RenderOnClient } from '../RenderOnClient/RenderOnClient'
 
 type CreateRoomModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-};
+  isOpen: boolean
+  onClose: () => void
+}
 
 export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
-  const [name, setName] = useState("");
-  const [nameErrorMessage, setNameErrorMessage] = useState("");
-  const createRoom = trpc.room.createRoom.useMutation();
+  const [name, setName] = useState('')
+  const [nameErrorMessage, setNameErrorMessage] = useState('')
+  const createRoom = trpc.room.createRoom.useMutation()
 
   const validate = (nextName: string) => {
     if (!nextName) {
-      setNameErrorMessage("Name is required");
+      setNameErrorMessage('Name is required')
 
-      return false;
+      return false
     }
 
     if (nextName.length > 64) {
-      setNameErrorMessage("Name cannot be longer than 64 characters");
+      setNameErrorMessage('Name cannot be longer than 64 characters')
 
-      return false;
+      return false
     }
 
-    setNameErrorMessage("");
+    setNameErrorMessage('')
 
-    return true;
-  };
+    return true
+  }
 
   const handleClose = () => {
-    setName("");
-    setNameErrorMessage("");
-    onClose();
-  };
+    setName('')
+    setNameErrorMessage('')
+    onClose()
+  }
 
   const handleSubmit: FormEventHandler = (event) => {
-    event.preventDefault();
+    event.preventDefault()
 
     if (validate(name)) {
-      createRoom.mutate({ name }, { onSuccess: handleClose });
+      createRoom.mutate({ name }, { onSuccess: handleClose })
     }
-  };
+  }
 
   return (
     <RenderOnClient>
@@ -60,13 +60,13 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
               required
               value={name}
               onChange={(event) => {
-                setName(event.target.value);
-                validate(event.target.value);
+                setName(event.target.value)
+                validate(event.target.value)
               }}
               onBlur={() => {
-                validate(name);
+                validate(name)
               }}
-              color={nameErrorMessage ? "failure" : undefined}
+              color={nameErrorMessage ? 'failure' : undefined}
               helperText={nameErrorMessage}
             />
           </Modal.Body>
@@ -77,5 +77,5 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
         </form>
       </Modal>
     </RenderOnClient>
-  );
+  )
 }

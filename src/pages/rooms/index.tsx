@@ -1,14 +1,14 @@
-import { Layout } from "~/components/Layout/Layout";
-import { trpc } from "~/utils/trpc";
-import { Button, Spinner } from "flowbite-react";
-import { RoomList } from "~/components/RoomList/RoomList";
-import { CreateRoomModal } from "~/components/CreateRoomModal/CreateRoomModal";
-import { useState } from "react";
+import { Layout } from '~/components/Layout/Layout'
+import { trpc } from '~/utils/trpc'
+import { Button, Spinner } from 'flowbite-react'
+import { RoomList } from '~/components/RoomList/RoomList'
+import { CreateRoomModal } from '~/components/CreateRoomModal/CreateRoomModal'
+import { useState } from 'react'
 
 export default function Rooms() {
-  const trpcContext = trpc.useContext();
-  const rooms = trpc.room.getRooms.useQuery();
-  const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState(false);
+  const trpcContext = trpc.useContext()
+  const rooms = trpc.room.getRooms.useQuery()
+  const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState(false)
 
   return (
     <Layout>
@@ -18,7 +18,7 @@ export default function Rooms() {
       <Button
         className="mt-4"
         onClick={() => {
-          setIsCreateRoomModalOpen(true);
+          setIsCreateRoomModalOpen(true)
         }}
       >
         Create Room
@@ -26,10 +26,10 @@ export default function Rooms() {
       <CreateRoomModal
         isOpen={isCreateRoomModalOpen}
         onClose={() => {
-          setIsCreateRoomModalOpen(false);
-          void trpcContext.room.getRooms.invalidate();
+          setIsCreateRoomModalOpen(false)
+          void trpcContext.room.getRooms.invalidate()
         }}
       />
     </Layout>
-  );
+  )
 }

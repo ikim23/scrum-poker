@@ -1,8 +1,8 @@
-import { TRPCError } from "@trpc/server";
-import { z } from "~/utils/zod";
-import { nanoid } from "nanoid/async";
+import { TRPCError } from '@trpc/server'
+import { z } from '~/utils/zod'
+import { nanoid } from 'nanoid/async'
 
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
 
 export const roomRouter = createTRPCRouter({
   createRoom: protectedProcedure
@@ -18,16 +18,16 @@ export const roomRouter = createTRPCRouter({
           name,
           createdBy: user.email,
         },
-      });
+      })
 
-      return newRoom;
+      return newRoom
     }),
   getRooms: protectedProcedure.query(async ({ ctx: { user, prisma } }) => {
     const rooms = await prisma.room.findMany({
       where: { createdBy: user.email },
-    });
+    })
 
-    return rooms;
+    return rooms
   }),
   deleteRoom: protectedProcedure
     .input(
@@ -38,9 +38,9 @@ export const roomRouter = createTRPCRouter({
     .mutation(async ({ input: { roomId }, ctx: { user, prisma } }) => {
       const { count } = await prisma.room.deleteMany({
         where: { AND: [{ createdBy: user.email }, { roomId }] },
-      });
+      })
 
-      return count > 0;
+      return count > 0
     }),
   connectToRoom: protectedProcedure
     .input(
@@ -56,9 +56,9 @@ export const roomRouter = createTRPCRouter({
           user: user.email,
         },
         update: {},
-      });
+      })
     }),
   // createVoteRound
   // getVoteRound
   // vote
-});
+})

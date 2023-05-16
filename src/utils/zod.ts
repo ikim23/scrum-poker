@@ -1,4 +1,4 @@
-import { z as zod } from "zod";
+import { z as zod } from 'zod'
 
 export const z = {
   ...zod,
@@ -7,4 +7,4 @@ export const z = {
       .string()
       .min(1)
       .regex(/^[a-zA-Z0-9_-]+$/),
-};
+}

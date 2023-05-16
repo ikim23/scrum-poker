@@ -1,14 +1,14 @@
-import Link from "next/link";
-import { RouterOutputs } from "~/utils/trpc";
-import { FiExternalLink } from "react-icons/fi";
+import Link from 'next/link'
+import { RouterOutputs } from '~/utils/trpc'
+import { FiExternalLink } from 'react-icons/fi'
 
 type RoomListProps = {
-  rooms: RouterOutputs["room"]["getRooms"];
-};
+  rooms: RouterOutputs['room']['getRooms']
+}
 
 export function RoomList({ rooms }: RoomListProps) {
   if (rooms.length === 0) {
-    return <div>No rooms yet!</div>;
+    return <div>No rooms yet!</div>
   }
 
   return (
@@ -24,5 +24,5 @@ export function RoomList({ rooms }: RoomListProps) {
         </li>
       ))}
     </ul>
-  );
+  )
 }
