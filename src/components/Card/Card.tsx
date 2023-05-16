@@ -1,11 +1,11 @@
 import { Button } from 'flowbite-react'
 
 type CardProps = {
-  value: string
   onClick: () => void
+  value: string
 }
 
-export function Card({ value, onClick }: CardProps) {
+export function Card({ onClick, value }: CardProps) {
   return (
     <Button className="h-[8rem] w-[8rem]" onClick={onClick}>
       <span className=" text-5xl">{value}</span>

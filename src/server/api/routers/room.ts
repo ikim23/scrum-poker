@@ -10,7 +10,7 @@ export const roomRouter = createTRPCRouter({
         roomId: z.nanoId(),
       })
     )
-    .mutation(async ({ input: { roomId }, ctx: { user, prisma } }) => {
+    .mutation(async ({ ctx: { prisma, user }, input: { roomId } }) => {
       await prisma.roomUser.upsert({
         create: {
           roomId,
@@ -26,7 +26,7 @@ export const roomRouter = createTRPCRouter({
         name: z.string().min(1).max(64),
       })
     )
-    .mutation(async ({ input: { name }, ctx: { user, prisma } }) => {
+    .mutation(async ({ ctx: { prisma, user }, input: { name } }) => {
       const newRoom = await prisma.room.create({
         data: {
           createdBy: user.email,
@@ -43,14 +43,14 @@ export const roomRouter = createTRPCRouter({
         roomId: z.nanoId(),
       })
     )
-    .mutation(async ({ input: { roomId }, ctx: { user, prisma } }) => {
+    .mutation(async ({ ctx: { prisma, user }, input: { roomId } }) => {
       const { count } = await prisma.room.deleteMany({
         where: { AND: [{ createdBy: user.email }, { roomId }] },
       })
 
       return count > 0
     }),
-  getRooms: protectedProcedure.query(async ({ ctx: { user, prisma } }) => {
+  getRooms: protectedProcedure.query(async ({ ctx: { prisma, user } }) => {
     const rooms = await prisma.room.findMany({
       where: { createdBy: user.email },
     })
