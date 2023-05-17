@@ -1,7 +1,7 @@
 export default class User {
-  static create({ email, id, image, name }: { email: string; id: string; image: string; name: string }): User {
-    return new User(id, email, name, image)
+  static create({ id, name }: { id: string; name: string }): User {
+    return new User(id, name)
   }
 
-  private constructor(readonly userId: string, readonly email: string, readonly name: string, readonly image: string) {}
+  private constructor(readonly userId: string, readonly name: string) {}
 }

@@ -6,25 +6,6 @@ import { createRouter, userProcedure } from '~/server/api/trpc'
 import { z } from '~/utils/zod'
 
 export const roomRouter = createRouter({
-  connectToRoom: userProcedure
-    .input(
-      z.object({
-        roomId: z.nanoId(),
-      })
-    )
-    .mutation(({ ctx: { repository, user }, input: { roomId } }) => {
-      const room = repository.room.getRoom(roomId)
-
-      if (!room) {
-        throw new TRPCError({ code: 'NOT_FOUND' })
-      }
-
-      if (!room.canConnect(user)) {
-        throw new TRPCError({ code: 'BAD_REQUEST' })
-      }
-
-      room.connect(user)
-    }),
   createRoom: userProcedure
     .input(
       z.object({
@@ -35,7 +16,7 @@ export const roomRouter = createRouter({
       const roomId = await nanoid()
       const room = Room.create({ name, owner: user, roomId })
 
-      repository.room.createRoom(room)
+      await repository.room.createRoom(room)
 
       return room
     }),
@@ -45,8 +26,8 @@ export const roomRouter = createRouter({
         roomId: z.nanoId(),
       })
     )
-    .mutation(({ ctx: { repository, user }, input: { roomId } }) => {
-      const room = repository.room.getRoom(roomId)
+    .mutation(async ({ ctx: { repository, user }, input: { roomId } }) => {
+      const room = await repository.room.getRoom(roomId)
 
       if (!room) {
         throw new TRPCError({ code: 'NOT_FOUND' })
@@ -56,12 +37,70 @@ export const roomRouter = createRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED' })
       }
 
-      repository.room.deleteRoom(roomId)
+      await repository.room.deleteRoom(roomId)
     }),
-  getRooms: userProcedure.query(({ ctx: { repository, user } }) => {
-    return repository.room.getUserRooms(user)
+  disconnect: userProcedure
+    .input(
+      z.object({
+        roomId: z.nanoId(),
+      })
+    )
+    .mutation(async ({ ctx: { repository, user }, input: { roomId } }) => {
+      const room = await repository.room.getRoom(roomId)
+
+      if (!room) {
+        throw new TRPCError({ code: 'NOT_FOUND' })
+      }
+
+      if (!room.canDisconnect(user)) {
+        throw new TRPCError({ code: 'BAD_REQUEST' })
+      }
+
+      room.disconnect(user)
+    }),
+  getRoom: userProcedure
+    .input(
+      z.object({
+        roomId: z.nanoId(),
+      })
+    )
+    .query(async ({ ctx: { repository }, input: { roomId } }) => {
+      const room = await repository.room.getRoom(roomId)
+
+      if (!room) {
+        throw new TRPCError({ code: 'NOT_FOUND' })
+      }
+
+      return {
+        connectedUsers: room.connectedUsers.map((user) => ({
+          name: user.name,
+          userId: user.userId,
+        })),
+        name: room.name,
+      }
+    }),
+  getRooms: userProcedure.query(async ({ ctx: { repository, user } }) => {
+    const rooms = await repository.room.getUserRooms(user)
+
+    return rooms
   }),
-  // createVoteRound
-  // getVoteRound
-  // vote
+  reconnect: userProcedure
+    .input(
+      z.object({
+        roomId: z.nanoId(),
+      })
+    )
+    .mutation(async ({ ctx: { repository, user }, input: { roomId } }) => {
+      const room = await repository.room.getRoom(roomId)
+
+      if (!room) {
+        throw new TRPCError({ code: 'NOT_FOUND' })
+      }
+
+      if (!room.canConnect(user)) {
+        return
+      }
+
+      room.connect(user)
+    }),
 })

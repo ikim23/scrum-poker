@@ -13,6 +13,10 @@ export default class Room {
     this.connect(owner)
   }
 
+  get connectedUsers() {
+    return Object.values(this.users)
+  }
+
   canConnect(user: User) {
     return !this.hasUser(user)
   }

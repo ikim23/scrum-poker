@@ -1,30 +1,83 @@
-import type Room from '~/core/Room'
-import type User from '~/core/User'
-import { env } from '~/env.mjs'
+import {
+  type PrismaClient,
+  type Room as RoomEntity,
+  type RoomUser as UserEntity,
+  type Vote as VoteEntity,
+} from '@prisma/client'
 
-const globalForRooms = globalThis as unknown as { rooms: Record<string, Room> }
+import Room from '~/core/Room'
+import User from '~/core/User'
 
-const roomMap = globalForRooms.rooms ?? {}
+function mapRoomEntityToModel(room: RoomEntity & { users: UserEntity[]; votes: VoteEntity[] }): Room {
+  const users = room.users.map((user) => User.create({ id: user.userId, name: user.name }))
+  const owner = users.find((user) => user.userId === room.ownerId)
 
-if (env.NODE_ENV !== 'production') globalForRooms.rooms = roomMap
+  if (!owner) {
+    throw new Error()
+  }
 
-export default function createRoomRepository() {
-  const { rooms } = globalForRooms
+  return Room.create({ name: room.name, owner, roomId: room.roomId })
+}
 
+export default function createRoomRepository(prisma: PrismaClient) {
   return {
-    createRoom(room: Room) {
-      rooms[room.roomId] = room
+    async createRoom(room: Room) {
+      await prisma.room.create({
+        data: {
+          name: room.name,
+          ownerId: room.owner.userId,
+          roomId: room.roomId,
+          users: {
+            connectOrCreate: {
+              create: {
+                name: room.owner.name,
+                userId: room.owner.userId,
+              },
+              where: {
+                roomId_userId: {
+                  roomId: room.roomId,
+                  userId: room.owner.userId,
+                },
+              },
+            },
+          },
+        },
+      })
 
       return room
     },
-    deleteRoom(roomId: string) {
-      delete rooms[roomId]
+    async deleteRoom(roomId: string) {
+      await prisma.room.delete({
+        where: {
+          roomId,
+        },
+      })
     },
-    getRoom(roomId: string) {
-      return rooms[roomId]
+    async getRoom(roomId: string) {
+      const room = await prisma.room.findUniqueOrThrow({
+        include: {
+          users: true,
+          votes: true,
+        },
+        where: {
+          roomId,
+        },
+      })
+
+      return mapRoomEntityToModel(room)
     },
-    getUserRooms(user: User) {
-      return Object.values(rooms).filter((room) => room.owner.userId === user.userId)
+    async getUserRooms(user: User) {
+      const rooms = await prisma.room.findMany({
+        include: {
+          users: true,
+          votes: true,
+        },
+        where: {
+          ownerId: user.userId,
+        },
+      })
+
+      return rooms.map(mapRoomEntityToModel)
     },
     updateRoom(room: Room) {
       return this.createRoom(room)

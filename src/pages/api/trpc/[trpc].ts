@@ -11,6 +11,7 @@ export default createNextApiHandler({
     env.NODE_ENV === 'development'
       ? ({ error, path }) => {
           console.error(`❌ tRPC failed on ${path ?? '<no-path>'}: ${error.message}`)
+          console.log(error)
         }
       : undefined,
   router: appRouter,

@@ -2,7 +2,7 @@ import { type CreateNextContextOptions } from '@trpc/server/adapters/next'
 
 import createRoomRepository from '~/repository/roomRepository'
 import { getServerAuthSession } from '~/server/auth'
-// import { prisma } from '~/server/db'
+import { prisma } from '~/server/db'
 // import { pusher } from '~/server/pusher'
 
 export const createContext = async ({ req, res }: CreateNextContextOptions) => {
@@ -10,7 +10,7 @@ export const createContext = async ({ req, res }: CreateNextContextOptions) => {
 
   return {
     repository: {
-      room: createRoomRepository(),
+      room: createRoomRepository(prisma),
     },
     session,
   }

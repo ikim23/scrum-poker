@@ -1,35 +1,39 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Room {
-    roomId    String     @id
-    name      String
-    createdBy String
-    roomUsers RoomUser[]
-    votes     Vote[]
+  roomId  String @id
+  name    String
+  ownerId String
 
-    @@index([createdBy])
+  users RoomUser[]
+  votes Vote[]
+
+  @@index([ownerId])
 }
 
 model RoomUser {
-    roomId String
-    room   Room   @relation(fields: [roomId], references: [roomId])
-    user   String
+  roomId String
+  userId String
+  name   String
 
-    @@id([roomId, user])
+  room Room @relation(fields: [roomId], references: [roomId])
+
+  @@id([roomId, userId])
 }
 
 model Vote {
-    roomId String
-    room   Room   @relation(fields: [roomId], references: [roomId])
-    user   String
-    value  Int
+  roomId String
+  userId String
+  value  Int
 
-    @@id([roomId, user])
+  room Room @relation(fields: [roomId], references: [roomId])
+
+  @@id([roomId, userId])
 }
