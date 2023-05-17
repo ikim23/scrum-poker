@@ -5,6 +5,17 @@ import GoogleProvider from 'next-auth/providers/google'
 import { env } from '~/env.mjs'
 
 export const authOptions: NextAuthOptions = {
+  callbacks: {
+    session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.sub,
+        },
+      }
+    },
+  },
   pages: {
     signIn: '/',
   },

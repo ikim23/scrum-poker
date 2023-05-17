@@ -1,4 +1,4 @@
-import { Button } from 'flowbite-react'
+import { Button } from '~/components/Button/Button'
 
 type CardProps = {
   onClick: () => void

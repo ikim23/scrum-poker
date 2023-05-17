@@ -1,7 +1,8 @@
-import { Button } from 'flowbite-react'
 import { useRouter } from 'next/router'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import { type PropsWithChildren } from 'react'
+
+import { Button } from '~/components/Button/Button'
 
 export function Layout({ children }: PropsWithChildren) {
   const router = useRouter()

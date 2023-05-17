@@ -1,36 +1,46 @@
-import { Button, Spinner } from 'flowbite-react'
 import { useState } from 'react'
 
-import { CreateRoomModal } from '~/components/CreateRoomModal/CreateRoomModal'
+import { Button } from '~/components/Button/Button'
 import { Layout } from '~/components/Layout/Layout'
 import { RoomList } from '~/components/RoomList/RoomList'
+import { Spinner } from '~/components/Spinner/Spinner'
 import { trpc } from '~/utils/trpc'
 
 export default function Rooms() {
-  const trpcContext = trpc.useContext()
+  const [roomName, setRoomName] = useState('')
   const rooms = trpc.room.getRooms.useQuery()
-  const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState(false)
+  const createRoom = trpc.room.createRoom.useMutation({
+    onSuccess: () => {
+      setRoomName('')
+      void rooms.refetch()
+    },
+  })
 
   return (
     <Layout>
       <h1 className="mb-4 text-3xl">Your Rooms</h1>
-      {rooms.isLoading && <Spinner />}
-      {rooms.isSuccess && <RoomList rooms={rooms.data} />}
-      <Button
-        className="mt-4"
-        onClick={() => {
-          setIsCreateRoomModalOpen(true)
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          createRoom.mutate({ name: roomName })
         }}
       >
-        Create Room
-      </Button>
-      <CreateRoomModal
-        isOpen={isCreateRoomModalOpen}
-        onClose={() => {
-          setIsCreateRoomModalOpen(false)
-          void trpcContext.room.getRooms.invalidate()
-        }}
-      />
+        <input
+          className="mr-2 rounded text-black"
+          maxLength={64}
+          minLength={3}
+          onChange={(event) => {
+            setRoomName(event.target.value)
+          }}
+          type="text"
+          value={roomName}
+        />
+        <Button className="mb-4" isDisabled={!roomName} type="submit">
+          Create Room
+        </Button>
+      </form>
+      {rooms.isLoading && <Spinner />}
+      {rooms.isSuccess && <RoomList rooms={rooms.data} />}
     </Layout>
   )
 }

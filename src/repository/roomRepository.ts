@@ -1,8 +1,15 @@
 import type Room from '~/core/Room'
 import type User from '~/core/User'
+import { env } from '~/env.mjs'
+
+const globalForRooms = globalThis as unknown as { rooms: Record<string, Room> }
+
+const roomMap = globalForRooms.rooms ?? {}
+
+if (env.NODE_ENV !== 'production') globalForRooms.rooms = roomMap
 
 export default function createRoomRepository() {
-  const rooms: Record<string, Room> = {}
+  const { rooms } = globalForRooms
 
   return {
     createRoom(room: Room) {
