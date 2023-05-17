@@ -1,61 +1,65 @@
+import { TRPCError } from '@trpc/server'
 import { nanoid } from 'nanoid/async'
 
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc'
+import Room from '~/core/Room'
+import { createRouter, userProcedure } from '~/server/api/trpc'
 import { z } from '~/utils/zod'
 
-export const roomRouter = createTRPCRouter({
-  connectToRoom: protectedProcedure
+export const roomRouter = createRouter({
+  connectToRoom: userProcedure
     .input(
       z.object({
         roomId: z.nanoId(),
       })
     )
-    .mutation(async ({ ctx: { prisma, user }, input: { roomId } }) => {
-      await prisma.roomUser.upsert({
-        create: {
-          roomId,
-          user: user.email,
-        },
-        update: {},
-        where: { roomId_user: { roomId, user: user.email } },
-      })
+    .mutation(({ ctx: { repository, user }, input: { roomId } }) => {
+      const room = repository.room.getRoom(roomId)
+
+      if (!room) {
+        throw new TRPCError({ code: 'NOT_FOUND' })
+      }
+
+      if (!room.canConnect(user)) {
+        throw new TRPCError({ code: 'BAD_REQUEST' })
+      }
+
+      room.connect(user)
     }),
-  createRoom: protectedProcedure
+  createRoom: userProcedure
     .input(
       z.object({
         name: z.string().min(1).max(64),
       })
     )
-    .mutation(async ({ ctx: { prisma, user }, input: { name } }) => {
-      const newRoom = await prisma.room.create({
-        data: {
-          createdBy: user.email,
-          name,
-          roomId: await nanoid(),
-        },
-      })
+    .mutation(async ({ ctx: { repository, user }, input: { name } }) => {
+      const roomId = await nanoid()
+      const room = Room.create({ name, owner: user, roomId })
 
-      return newRoom
+      repository.room.createRoom(room)
+
+      return room
     }),
-  deleteRoom: protectedProcedure
+  deleteRoom: userProcedure
     .input(
       z.object({
         roomId: z.nanoId(),
       })
     )
-    .mutation(async ({ ctx: { prisma, user }, input: { roomId } }) => {
-      const { count } = await prisma.room.deleteMany({
-        where: { AND: [{ createdBy: user.email }, { roomId }] },
-      })
+    .mutation(({ ctx: { repository, user }, input: { roomId } }) => {
+      const room = repository.room.getRoom(roomId)
 
-      return count > 0
+      if (!room) {
+        throw new TRPCError({ code: 'NOT_FOUND' })
+      }
+
+      if (room.owner.userId !== user.userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' })
+      }
+
+      repository.room.deleteRoom(roomId)
     }),
-  getRooms: protectedProcedure.query(async ({ ctx: { prisma, user } }) => {
-    const rooms = await prisma.room.findMany({
-      where: { createdBy: user.email },
-    })
-
-    return rooms
+  getRooms: userProcedure.query(({ ctx: { repository, user } }) => {
+    return repository.room.getUserRooms(user)
   }),
   // createVoteRound
   // getVoteRound
