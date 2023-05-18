@@ -79,8 +79,31 @@ export default function createRoomRepository(prisma: PrismaClient) {
 
       return rooms.map(mapRoomEntityToModel)
     },
-    updateRoom(room: Room) {
-      return this.createRoom(room)
+    async updateRoom(room: Room) {
+      await prisma.room.update({
+        data: {
+          name: room.name,
+          ownerId: room.owner.userId,
+          roomId: room.roomId,
+          users: {
+            connectOrCreate: room.connectedUsers.map((user) => ({
+              create: {
+                name: user.name,
+                userId: user.userId,
+              },
+              where: {
+                roomId_userId: {
+                  roomId: room.roomId,
+                  userId: user.userId,
+                },
+              },
+            })),
+          },
+        },
+        where: {
+          roomId: room.roomId,
+        },
+      })
     },
   }
 }
