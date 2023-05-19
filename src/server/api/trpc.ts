@@ -20,7 +20,7 @@ const enforceIsAuthorized = trpc.middleware(({ ctx, next }) => {
 
   return next({
     ctx: {
-      user: User.create(user),
+      user: User.create({ id: user.id, name: user.email }),
     },
   })
 })

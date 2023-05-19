@@ -16,7 +16,14 @@ function mapRoomEntityToModel(room: RoomEntity & { users: UserEntity[]; votes: V
     throw new Error()
   }
 
-  return Room.create({ name: room.name, owner, roomId: room.roomId })
+  const roomModel = Room.create({ name: room.name, owner, roomId: room.roomId })
+  users
+    .filter((user) => user.userId !== room.ownerId)
+    .forEach((user) => {
+      roomModel.connect(user)
+    })
+
+  return roomModel
 }
 
 export default function createRoomRepository(prisma: PrismaClient) {

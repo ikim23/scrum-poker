@@ -57,6 +57,8 @@ export const roomRouter = createRouter({
       }
 
       room.disconnect(user)
+
+      await repository.room.updateRoom(room)
     }),
   getRoom: userProcedure
     .input(
@@ -102,5 +104,7 @@ export const roomRouter = createRouter({
       }
 
       room.connect(user)
+
+      await repository.room.updateRoom(room)
     }),
 })
