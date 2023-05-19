@@ -1,5 +1,4 @@
 import { useRouter } from 'next/router'
-import { useCallback, useEffect } from 'react'
 
 import { Card } from '~/components/Card/Card'
 import { Layout } from '~/components/Layout/Layout'
@@ -12,36 +11,9 @@ export default function Room() {
   const router = useRouter()
   const roomId = router.query.roomId as string | undefined
 
-  const { data: room, refetch: refetchRoom } = trpc.room.getRoom.useQuery(
-    { roomId: roomId ?? '' },
-    { enabled: Boolean(roomId) }
-  )
-  const { mutate: reconnect } = trpc.room.reconnect.useMutation({
-    onSuccess: () => {
-      void refetchRoom()
-    },
-  })
-  const { mutate: disconnect } = trpc.room.disconnect.useMutation()
+  const { data: room } = trpc.room.getRoom.useQuery({ roomId: roomId ?? '' }, { enabled: Boolean(roomId) })
 
-  useEffect(() => {
-    if (roomId) {
-      reconnect({ roomId })
-    }
-
-    return () => {
-      if (roomId) {
-        disconnect({ roomId })
-      }
-    }
-  }, [reconnect, disconnect, roomId])
-
-  const handleRoomChange = useCallback(() => {
-    void refetchRoom()
-  }, [refetchRoom])
-
-  usePusher({ onDisconnect: handleRoomChange, onReconnect: handleRoomChange, roomId })
-
-  const connectedUsers = room?.connectedUsers ?? []
+  const { users } = usePusher({ roomId })
 
   return (
     <Layout>
@@ -61,7 +33,7 @@ export default function Room() {
           <h2 className="mb-4 text-3xl">Connected Users</h2>
 
           <ul>
-            {connectedUsers.map((user) => (
+            {users.map((user) => (
               <li key={user.userId}>{user.name}</li>
             ))}
           </ul>

@@ -1,4 +1,5 @@
 export const Events = {
-  disconnect: 'disconnect',
-  reconnect: 'reconnect',
+  MemberAdded: 'pusher:member_added',
+  MemberRemoved: 'pusher:member_removed',
+  SubscriptionSucceeded: 'pusher:subscription_succeeded',
 } as const

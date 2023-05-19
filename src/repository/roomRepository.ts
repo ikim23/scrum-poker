@@ -34,21 +34,14 @@ export default function createRoomRepository(prisma: PrismaClient) {
           name: room.name,
           ownerId: room.owner.userId,
           roomId: room.roomId,
-          users: {
-            connectOrCreate: {
-              create: {
-                name: room.owner.name,
-                userId: room.owner.userId,
-              },
-              where: {
-                roomId_userId: {
-                  roomId: room.roomId,
-                  userId: room.owner.userId,
-                },
-              },
-            },
-          },
         },
+      })
+      await prisma.roomUser.createMany({
+        data: room.connectedUsers.map((user) => ({
+          name: user.name,
+          roomId: room.roomId,
+          userId: user.userId,
+        })),
       })
 
       return room
@@ -92,24 +85,22 @@ export default function createRoomRepository(prisma: PrismaClient) {
           name: room.name,
           ownerId: room.owner.userId,
           roomId: room.roomId,
-          users: {
-            connectOrCreate: room.connectedUsers.map((user) => ({
-              create: {
-                name: user.name,
-                userId: user.userId,
-              },
-              where: {
-                roomId_userId: {
-                  roomId: room.roomId,
-                  userId: user.userId,
-                },
-              },
-            })),
-          },
         },
         where: {
           roomId: room.roomId,
         },
+      })
+      await prisma.roomUser.deleteMany({
+        where: {
+          roomId: room.roomId,
+        },
+      })
+      await prisma.roomUser.createMany({
+        data: room.connectedUsers.map((user) => ({
+          name: user.name,
+          roomId: room.roomId,
+          userId: user.userId,
+        })),
       })
     },
   }
