@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid/async'
 
 import Room from '~/core/Room'
 import { createRouter, userProcedure } from '~/server/api/trpc'
+import { Events } from '~/utils/events'
 import { z } from '~/utils/zod'
 
 export const roomRouter = createRouter({
@@ -45,7 +46,7 @@ export const roomRouter = createRouter({
         roomId: z.nanoId(),
       })
     )
-    .mutation(async ({ ctx: { repository, user }, input: { roomId } }) => {
+    .mutation(async ({ ctx: { pusher, repository, user }, input: { roomId } }) => {
       const room = await repository.room.getRoom(roomId)
 
       if (!room) {
@@ -59,6 +60,7 @@ export const roomRouter = createRouter({
       room.disconnect(user)
 
       await repository.room.updateRoom(room)
+      await pusher.trigger(roomId, Events.disconnect, { user })
     }),
   getRoom: userProcedure
     .input(
@@ -92,7 +94,7 @@ export const roomRouter = createRouter({
         roomId: z.nanoId(),
       })
     )
-    .mutation(async ({ ctx: { repository, user }, input: { roomId } }) => {
+    .mutation(async ({ ctx: { pusher, repository, user }, input: { roomId } }) => {
       const room = await repository.room.getRoom(roomId)
 
       if (!room) {
@@ -106,5 +108,6 @@ export const roomRouter = createRouter({
       room.connect(user)
 
       await repository.room.updateRoom(room)
+      await pusher.trigger(roomId, Events.reconnect, { user })
     }),
 })
