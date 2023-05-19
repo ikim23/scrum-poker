@@ -7,7 +7,7 @@ const signInPage = '/'
 const skipPaths = ['/_next', '/favicon.ico', '/api']
 
 export default async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
+  const { basePath, origin, pathname, search } = req.nextUrl
 
   if (skipPaths.some((path) => pathname.startsWith(path))) {
     return
@@ -17,11 +17,14 @@ export default async function middleware(req: NextRequest) {
 
   if (pathname === signInPage) {
     if (token) {
-      return NextResponse.redirect(new URL('/rooms', req.url))
+      return NextResponse.redirect(new URL(`${basePath}/rooms`, origin))
     }
   } else {
     if (!token) {
-      return NextResponse.redirect(new URL(signInPage, req.url))
+      const signInUrl = new URL(`${basePath}${signInPage}`, origin)
+      signInUrl.searchParams.append('callback', `${basePath}${pathname}${search}`)
+
+      return NextResponse.redirect(signInUrl)
     }
   }
 }

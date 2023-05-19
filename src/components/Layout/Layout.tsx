@@ -8,7 +8,7 @@ export function Layout({ children }: PropsWithChildren) {
   const router = useRouter()
   const session = useSession()
 
-  const callbackUrl = (router.query.callbackUrl as string | undefined) ?? '/rooms'
+  const callbackUrl = (router.query.callback as string | undefined) ?? '/rooms'
 
   return (
     <main className="min-h-screen bg-gray-900">
