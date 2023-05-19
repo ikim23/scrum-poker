@@ -2,7 +2,9 @@ import { TRPCError } from '@trpc/server'
 import { nanoid } from 'nanoid/async'
 
 import Room from '~/core/Room'
+import { ALLOWED_VOTES } from '~/core/Vote'
 import { createRouter, userProcedure } from '~/server/api/trpc'
+import { Events, getRoomChannelName } from '~/utils/events'
 import { z } from '~/utils/zod'
 
 export const roomRouter = createRouter({
@@ -65,4 +67,26 @@ export const roomRouter = createRouter({
 
     return rooms
   }),
+  vote: userProcedure
+    .input(
+      z.object({
+        roomId: z.nanoId(),
+        vote: z.enum(ALLOWED_VOTES),
+      })
+    )
+    .mutation(async ({ ctx: { pusher, repository, user }, input: { roomId, vote } }) => {
+      const room = await repository.room.getRoom(roomId)
+
+      if (!room) {
+        throw new TRPCError({ code: 'NOT_FOUND' })
+      }
+
+      room.vote(user, vote)
+
+      await repository.room.updateRoom(room)
+      await pusher.trigger(getRoomChannelName(roomId), Events.UserVoted, {
+        userId: user.userId,
+        vote,
+      })
+    }),
 })

@@ -58,7 +58,7 @@ export default class Room {
       throw new Error()
     }
 
-    const sumVotes = Object.values(this.votes).reduce((sum, vote) => sum + vote, 0)
+    const sumVotes = Object.values(this.votes).reduce((sum, vote) => sum + Number(vote), 0)
 
     return sumVotes / this.usersCount
   }

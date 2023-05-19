@@ -2,7 +2,7 @@ import Pusher, { type PresenceChannel } from 'pusher-js'
 import { useEffect, useState } from 'react'
 
 import { env } from '~/env.mjs'
-import { Events } from '~/utils/events'
+import { Events, getRoomChannelName } from '~/utils/events'
 import { trpc } from '~/utils/trpc'
 import { z, type zod } from '~/utils/zod'
 
@@ -42,7 +42,7 @@ export function usePusher({ roomId }: UsePusherProps) {
       },
       cluster: env.NEXT_PUBLIC_PUSHER_CLUSTER,
     })
-    const channel = pusher.subscribe(`presence-${roomId}`) as PresenceChannel
+    const channel = pusher.subscribe(getRoomChannelName(roomId)) as PresenceChannel
 
     function updateUsers() {
       const members = membersSchema.parse(channel.members.members)
@@ -56,6 +56,9 @@ export function usePusher({ roomId }: UsePusherProps) {
     })
     channel.bind(Events.MemberAdded, updateUsers)
     channel.bind(Events.MemberRemoved, updateUsers)
+    channel.bind(Events.UserVoted, (data) => {
+      console.log(data)
+    })
 
     return () => {
       channel.disconnect()
