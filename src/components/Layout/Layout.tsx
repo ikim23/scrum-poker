@@ -13,7 +13,7 @@ export function Layout({ children }: PropsWithChildren) {
   return (
     <main className="min-h-screen bg-gray-900">
       <header className=" flex items-center border-b-2 border-solid border-gray-700 bg-gray-800 px-10 py-6">
-        <span className="mr-auto text-xl">Scrum Poker</span>
+        <span className="mr-auto text-2xl">Scrum Poker</span>
         {session.status === 'authenticated' ? (
           <div className="flex items-center gap-6">
             <span>{session.data.user?.email}</span>

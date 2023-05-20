@@ -49,6 +49,28 @@ export default class Room {
     this.votes[user.userId] = vote
   }
 
+  finish(user: User) {
+    if (user.userId !== this.owner.userId) {
+      throw new Error()
+    }
+
+    const votes = Object.values(this.votes)
+    const sumVotes = votes.reduce((sum, vote) => sum + Number(vote), 0)
+    const average = sumVotes / votes.length
+
+    this.reset(user)
+
+    return average
+  }
+
+  reset(user: User) {
+    if (user.userId !== this.owner.userId) {
+      throw new Error()
+    }
+
+    this.votes = {}
+  }
+
   hasAllVotes() {
     return this.usersCount === this.votesCount
   }

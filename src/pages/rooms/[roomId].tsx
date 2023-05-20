@@ -1,5 +1,8 @@
 import { type GetServerSideProps } from 'next'
+import { useSession } from 'next-auth/react'
+import { FiCheck } from 'react-icons/fi'
 
+import { Button } from '~/components/Button/Button'
 import { Card } from '~/components/Card/Card'
 import { Layout } from '~/components/Layout/Layout'
 import { ALLOWED_VOTES } from '~/core/Vote'
@@ -13,14 +16,19 @@ type RoomProps = {
 }
 
 export default function Room({ roomId }: RoomProps) {
+  const session = useSession()
   const { data: room } = trpc.room.getRoom.useQuery({ roomId })
   const { mutate: vote } = trpc.room.vote.useMutation()
+  const { mutate: finishVoting } = trpc.room.finishVoting.useMutation()
+  const { mutate: resetVoting } = trpc.room.resetVoting.useMutation()
 
   const { users } = useRoom({ roomId })
 
   if (!room) {
     return null
   }
+
+  const isOwner = room.ownerUserId === session.data?.user.id
 
   return (
     <Layout>
@@ -40,13 +48,36 @@ export default function Room({ roomId }: RoomProps) {
           </div>
         </div>
 
-        <div>
-          <h2 className="mb-4 text-3xl">Connected Users</h2>
-          <ul>
-            {users.map((user) => (
-              <li key={user.userId}>{user.name}</li>
-            ))}
-          </ul>
+        <div className="flex flex-col justify-between">
+          <div>
+            <h2 className="mb-4 text-3xl">Connected Users</h2>
+            <ul>
+              {users.map((user) => (
+                <li className="flex items-center justify-between gap-2" key={user.userId}>
+                  <span>{user.name}</span>
+                  <FiCheck />
+                </li>
+              ))}
+            </ul>
+          </div>
+          {isOwner && (
+            <div className=" mt-4 flex gap-4">
+              <Button
+                onClick={() => {
+                  finishVoting({ roomId })
+                }}
+              >
+                Finish Voting
+              </Button>
+              <Button
+                onClick={() => {
+                  resetVoting({ roomId })
+                }}
+              >
+                Reset Voting
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

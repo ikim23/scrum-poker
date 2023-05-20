@@ -41,6 +41,25 @@ export const roomRouter = createRouter({
 
       await repository.room.deleteRoom(roomId)
     }),
+  finishVoting: userProcedure
+    .input(
+      z.object({
+        roomId: z.nanoId(),
+      })
+    )
+    .mutation(async ({ ctx: { repository, user }, input: { roomId } }) => {
+      const room = await repository.room.getRoom(roomId)
+
+      if (!room) {
+        throw new TRPCError({ code: 'NOT_FOUND' })
+      }
+
+      const average = room.finish(user)
+
+      await repository.room.updateRoom(room)
+
+      return average
+    }),
   getRoom: userProcedure
     .input(
       z.object({
@@ -60,6 +79,7 @@ export const roomRouter = createRouter({
           userId: user.userId,
         })),
         name: room.name,
+        ownerUserId: room.owner.userId,
       }
     }),
   getRooms: userProcedure.query(async ({ ctx: { repository, user } }) => {
@@ -67,6 +87,23 @@ export const roomRouter = createRouter({
 
     return rooms
   }),
+  resetVoting: userProcedure
+    .input(
+      z.object({
+        roomId: z.nanoId(),
+      })
+    )
+    .mutation(async ({ ctx: { repository, user }, input: { roomId } }) => {
+      const room = await repository.room.getRoom(roomId)
+
+      if (!room) {
+        throw new TRPCError({ code: 'NOT_FOUND' })
+      }
+
+      room.reset(user)
+
+      await repository.room.updateRoom(room)
+    }),
   vote: userProcedure
     .input(
       z.object({
