@@ -27,9 +27,6 @@ export const authOptions: NextAuthOptions = {
   ],
 }
 
-export const getServerAuthSession = (ctx: {
-  req: GetServerSidePropsContext['req']
-  res: GetServerSidePropsContext['res']
-}) => {
-  return getServerSession(ctx.req, ctx.res, authOptions)
+export const getServerAuthSession = (context: Pick<GetServerSidePropsContext, 'req' | 'res'>) => {
+  return getServerSession(context.req, context.res, authOptions)
 }
