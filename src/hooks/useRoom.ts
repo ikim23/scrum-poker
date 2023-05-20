@@ -15,11 +15,11 @@ const membersSchema = z.record(userSchema)
 
 type User = zod.infer<typeof userSchema>
 
-type UsePusherProps = {
+type UseRoomProps = {
   roomId: string | undefined
 }
 
-export function usePusher({ roomId }: UsePusherProps) {
+export function useRoom({ roomId }: UseRoomProps) {
   const [users, setUsers] = useState<User[]>([])
   const { mutate: authorizeChannel } = trpc.pusher.auth.useMutation()
 
@@ -61,6 +61,7 @@ export function usePusher({ roomId }: UsePusherProps) {
     })
 
     return () => {
+      channel.unbind()
       channel.disconnect()
     }
   }, [roomId, authorizeChannel, setUsers])
