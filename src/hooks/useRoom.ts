@@ -56,7 +56,7 @@ export function useRoom({ roomId }: UseRoomProps) {
     })
     channel.bind(Events.MemberAdded, updateUsers)
     channel.bind(Events.MemberRemoved, updateUsers)
-    channel.bind(Events.UserVoted, (data) => {
+    channel.bind(Events.UserVoted, (data: unknown) => {
       console.log(data)
     })
 
