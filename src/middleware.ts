@@ -8,16 +8,16 @@ const signInPage = '/'
 const skipPaths = ['/_next', '/favicon.ico', '/api']
 
 export default async function middleware(req: NextRequest) {
+  const { basePath, origin, pathname, search } = req.nextUrl
+
   const authResponse = nextBasicAuthMiddleware(undefined, req)
 
-  if (!authResponse.ok) {
+  if (!authResponse.ok && !pathname.startsWith('/api')) {
     return authResponse
   }
 
-  const { basePath, origin, pathname, search } = req.nextUrl
-
   if (skipPaths.some((path) => pathname.startsWith(path))) {
-    return
+    return NextResponse.next()
   }
 
   const token = await getToken({ req, secret: env.NEXTAUTH_SECRET })
