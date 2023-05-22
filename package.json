@@ -10,7 +10,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@prisma/client": "4.14.0",
+    "@prisma/client": "4.14.1",
     "@t3-oss/env-nextjs": "0.3.1",
     "@tanstack/react-query": "4.29.7",
     "@tanstack/react-query-devtools": "4.29.7",
@@ -51,7 +51,7 @@
     "postcss": "8.4.23",
     "prettier": "2.8.8",
     "prettier-plugin-tailwindcss": "0.3.0",
-    "prisma": "4.14.0",
+    "prisma": "4.14.1",
     "tailwindcss": "3.3.2",
     "typescript": "5.0.4"
   }
