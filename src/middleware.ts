@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { nextBasicAuthMiddleware } from 'nextjs-basic-auth-middleware'
 
 import { env } from '~/env.mjs'
 
@@ -7,6 +8,12 @@ const signInPage = '/'
 const skipPaths = ['/_next', '/favicon.ico', '/api']
 
 export default async function middleware(req: NextRequest) {
+  const authResponse = nextBasicAuthMiddleware(undefined, req)
+
+  if (!authResponse.ok) {
+    return authResponse
+  }
+
   const { basePath, origin, pathname, search } = req.nextUrl
 
   if (skipPaths.some((path) => pathname.startsWith(path))) {

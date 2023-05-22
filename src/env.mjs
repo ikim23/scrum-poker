@@ -7,6 +7,7 @@ export const env = createEnv({
     NEXT_PUBLIC_PUSHER_KEY: z.string().min(1),
   },
   runtimeEnv: {
+    BASIC_AUTH_CREDENTIALS: process.env.BASIC_AUTH_CREDENTIALS,
     DATABASE_URL: process.env.DATABASE_URL,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
@@ -19,6 +20,7 @@ export const env = createEnv({
     PUSHER_SECRET: process.env.PUSHER_SECRET,
   },
   server: {
+    BASIC_AUTH_CREDENTIALS: z.string(),
     DATABASE_URL: z.string().startsWith('postgres://'),
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
