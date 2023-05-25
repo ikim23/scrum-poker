@@ -17,7 +17,7 @@ model Room {
   name           String   @db.VarChar(64)
   connectedUsers String[]
   votes          Json
-  result         Int?     @db.SmallInt
+  result         Float?
 
   @@index([ownerId])
 }

@@ -5,7 +5,7 @@ CREATE TABLE "Room" (
     "name" VARCHAR(64) NOT NULL,
     "connectedUsers" TEXT[],
     "votes" JSONB NOT NULL,
-    "result" SMALLINT,
+    "result" DOUBLE PRECISION,
 
     CONSTRAINT "Room_pkey" PRIMARY KEY ("roomId")
 );
