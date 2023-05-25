@@ -1,4 +1,3 @@
-import { sha256 } from 'js-sha256'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 
 import { env } from '~/env.mjs'
@@ -20,17 +19,31 @@ function readBody(req: NextApiRequest): Promise<string> {
   })
 }
 
-const bodySchema = z
-  .object({
-    events: z
-      .object({
-        channel: z.string().min(1),
-        name: z.enum(['member_added', 'member_removed']),
-        user_id: z.string().min(1),
-      })
-      .array(),
-  })
-  .passthrough()
+async function isBodySignatureValid(body: string, signature: unknown) {
+  if (typeof signature !== 'string') {
+    return false
+  }
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(env.PUSHER_SECRET),
+    { hash: 'SHA-256', name: 'HMAC' },
+    false,
+    ['verify']
+  )
+
+  return await crypto.subtle.verify('HMAC', key, Buffer.from(signature, 'hex'), new TextEncoder().encode(body))
+}
+
+const bodySchema = z.object({
+  events: z
+    .object({
+      channel: z.string().min(1),
+      name: z.enum(['member_added', 'member_removed']),
+      user_id: z.string().min(1),
+    })
+    .array(),
+})
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.headers['x-pusher-key'] !== env.NEXT_PUBLIC_PUSHER_KEY) {
@@ -38,9 +51,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const body = await readBody(req)
-  const signature = sha256.hmac(env.PUSHER_SECRET, body)
+  const isValid = await isBodySignatureValid(body, req.headers['x-pusher-signature'])
 
-  if (req.headers['x-pusher-signature'] !== signature) {
+  if (!isValid) {
     return res.status(400).send({ reason: 'Signature does not match' })
   }
 
