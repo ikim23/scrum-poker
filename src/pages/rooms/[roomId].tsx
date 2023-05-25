@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { type GetServerSideProps } from 'next'
+import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import { FiCheck } from 'react-icons/fi'
 
@@ -8,14 +8,13 @@ import { Card } from '~/components/Card/Card'
 import { Layout } from '~/components/Layout/Layout'
 import { ALLOWED_VOTES } from '~/core/Vote'
 import { useRoom } from '~/hooks/useRoom'
-import { createSsrHelper } from '~/server/api/ssrHelper'
-import { z } from '~/utils/zod'
+import { trpc } from '~/utils/trpc'
 
 type RoomProps = {
   roomId: string
 }
 
-export default function Room({ roomId }: RoomProps) {
+function Room({ roomId }: RoomProps) {
   const session = useSession()
   const {
     actions: { finishVoting, resetVoting, vote },
@@ -100,26 +99,25 @@ export default function Room({ roomId }: RoomProps) {
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const parsedRoomId = z.nanoId().safeParse(context.query.roomId)
+export default function RoomWrapper() {
+  const router = useRouter()
+  const roomId = router.query.roomId as string
 
-  if (!parsedRoomId.success) {
-    return { notFound: true }
-  }
-
-  const ssrHelper = await createSsrHelper(context)
-  try {
-    const roomId = parsedRoomId.data
-
-    await ssrHelper.room.getRoom.fetch({ roomId })
-
-    return {
-      props: {
-        roomId,
-        trpcState: ssrHelper.dehydrate(),
-      },
+  const { isError, isLoading } = trpc.room.getRoom.useQuery(
+    { roomId },
+    {
+      enabled: typeof roomId === 'string',
+      retry: false,
     }
-  } catch {
-    return { notFound: true }
+  )
+
+  if (isLoading) {
+    return <Layout>Loading...</Layout>
   }
+
+  if (isError) {
+    return <Layout>Error</Layout>
+  }
+
+  return <Room roomId={roomId} />
 }

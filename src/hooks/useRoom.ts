@@ -29,10 +29,6 @@ export function useRoom({ roomId }: UseRoomProps) {
   const [users, setUsers] = useState<zod.infer<typeof membersSchema>>({})
 
   useEffect(() => {
-    if (!roomId) {
-      return
-    }
-
     const pusher = new Pusher(env.NEXT_PUBLIC_PUSHER_KEY, {
       channelAuthorization: {
         customHandler: (params, callback) => {
