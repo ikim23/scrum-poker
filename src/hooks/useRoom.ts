@@ -1,4 +1,5 @@
 import { map } from 'lodash'
+import { useSession } from 'next-auth/react'
 import Pusher, { type PresenceChannel } from 'pusher-js'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -19,8 +20,21 @@ type UseRoomProps = {
 }
 
 export function useRoom({ roomId }: UseRoomProps) {
+  const session = useSession()
+  const trpcContext = trpc.useContext()
   const { data: room, refetch } = trpc.room.getRoom.useQuery({ roomId }, { enabled: false })
-  const { mutate: vote } = trpc.room.vote.useMutation()
+  const { mutate: vote } = trpc.room.vote.useMutation({
+    onMutate(variables) {
+      trpcContext.room.getRoom.setData({ roomId }, (prevRoom) =>
+        prevRoom
+          ? {
+              ...prevRoom,
+              myVote: variables.vote,
+            }
+          : undefined
+      )
+    },
+  })
   const { mutate: finishVoting } = trpc.room.finishVoting.useMutation()
   const { mutate: resetVoting } = trpc.room.resetVoting.useMutation()
 
@@ -80,9 +94,9 @@ export function useRoom({ roomId }: UseRoomProps) {
     },
     room: room
       ? {
+          isOwner: room.ownerUserId === session.data?.user.id,
           myVote: room.myVote,
           name: room.name,
-          ownerId: room.ownerUserId,
           result: room.result,
           users: usersList,
         }

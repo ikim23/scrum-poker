@@ -1,6 +1,5 @@
 import classNames from 'classnames'
 import { useRouter } from 'next/router'
-import { useSession } from 'next-auth/react'
 import { FiCheck } from 'react-icons/fi'
 
 import { Button } from '~/components/Button/Button'
@@ -15,7 +14,6 @@ type RoomProps = {
 }
 
 function Room({ roomId }: RoomProps) {
-  const session = useSession()
   const {
     actions: { finishVoting, resetVoting, vote },
     room,
@@ -25,9 +23,7 @@ function Room({ roomId }: RoomProps) {
     return null
   }
 
-  const { myVote, name, ownerId, result, users } = room
-
-  const isOwner = ownerId === session.data?.user.id
+  const { isOwner, myVote, name, result, users } = room
 
   return (
     <Layout>

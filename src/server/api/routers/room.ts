@@ -82,7 +82,6 @@ export const roomRouter = createRouter({
         name: room.name,
         ownerUserId: room.ownerId,
         result,
-        userIdsWithVotes: room.usersWithVotes,
         votes: result ? room.getVotes() : mapValues(room.getVotes(), (value) => Boolean(value)),
       }
     }),
