@@ -4,39 +4,19 @@ generator client {
 }
 
 datasource db {
-  provider          = "postgresql"
-  url               = env("DATABASE_URL")
-  directUrl         = env("DIRECT_DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl         = env("DIRECT_DATABASE_URL")
+  // shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model Room {
-  roomId  String @id
+  roomId  String   @id
   name    String
   ownerId String
-
-  users RoomUser[]
-  votes Vote[]
+  users   String[]
+  votes   Json
+  result  Int?
 
   @@index([ownerId])
-}
-
-model RoomUser {
-  roomId String
-  userId String
-  name   String
-
-  room Room @relation(fields: [roomId], references: [roomId])
-
-  @@id([roomId, userId])
-}
-
-model Vote {
-  roomId String
-  userId String
-  value  Int
-
-  room Room @relation(fields: [roomId], references: [roomId])
-
-  @@id([roomId, userId])
 }

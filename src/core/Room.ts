@@ -1,99 +1,85 @@
-import type User from './User'
 import { ALLOWED_VOTES, type Vote } from './Vote'
 
 export default class Room {
-  static create({ name, owner, roomId }: { name: string; owner: User; roomId: string }): Room {
-    return new Room(roomId, owner, name)
+  static create({ name, ownerId, roomId }: { name: string; ownerId: string; roomId: string }): Room {
+    return new Room(roomId, ownerId, name)
   }
 
-  private readonly users: Record<string, User> = {}
+  private readonly users = new Set<string>()
   private votes: Record<string, Vote> = {}
+  private result: number | null = null
 
-  private constructor(readonly roomId: string, readonly owner: User, readonly name: string) {
-    this.connect(owner)
+  private constructor(readonly roomId: string, readonly ownerId: string, readonly name: string) {}
+
+  getUsers() {
+    return Array.from(this.users)
   }
 
-  get connectedUsers() {
-    return Object.values(this.users)
+  getVotes() {
+    return this.votes
   }
 
-  canConnect(user: User) {
-    return !this.hasUser(user)
+  getResult() {
+    return this.result
   }
 
-  connect(user: User) {
-    if (!this.canConnect(user)) {
+  get usersWithVotes() {
+    return Object.keys(this.votes)
+  }
+
+  canConnect(userId: string) {
+    return !this.users.has(userId)
+  }
+
+  connect(userId: string) {
+    if (!this.canConnect(userId)) {
       throw new Error()
     }
 
-    this.users[user.userId] = user
+    this.users.add(userId)
   }
 
-  canDisconnect(user: User) {
-    return this.hasUser(user)
+  canDisconnect(userId: string) {
+    return this.users.has(userId)
   }
 
-  disconnect(user: User) {
-    if (!this.canDisconnect(user)) {
+  disconnect(userId: string) {
+    if (!this.canDisconnect(userId)) {
       throw new Error()
     }
 
-    delete this.users[user.userId]
+    this.users.delete(userId)
   }
 
-  vote(user: User, vote: Vote) {
+  vote(userId: string, vote: Vote) {
+    if (!this.users.has(userId)) {
+      throw new Error()
+    }
     if (!ALLOWED_VOTES.includes(vote)) {
       throw new Error()
     }
 
-    this.votes[user.userId] = vote
+    this.votes[userId] = vote
   }
 
-  finish(user: User) {
-    if (user.userId !== this.owner.userId) {
+  finish(userId: string) {
+    if (userId !== this.ownerId) {
       throw new Error()
     }
 
     const votes = Object.values(this.votes)
     const sumVotes = votes.reduce((sum, vote) => sum + Number(vote), 0)
-    const average = sumVotes / votes.length
+    this.result = sumVotes / votes.length
 
-    this.reset(user)
-
-    return average
+    return this.result
   }
 
-  reset(user: User) {
-    if (user.userId !== this.owner.userId) {
+  reset(userId: string) {
+    if (userId !== this.ownerId) {
       throw new Error()
     }
 
     this.votes = {}
-  }
-
-  hasAllVotes() {
-    return this.usersCount === this.votesCount
-  }
-
-  getVoteAverage() {
-    if (!this.hasAllVotes()) {
-      throw new Error()
-    }
-
-    const sumVotes = Object.values(this.votes).reduce((sum, vote) => sum + Number(vote), 0)
-
-    return sumVotes / this.usersCount
-  }
-
-  private hasUser(user: User) {
-    return Boolean(this.users[user.userId])
-  }
-
-  private get usersCount() {
-    return Object.keys(this.users).length
-  }
-
-  private get votesCount() {
-    return Object.keys(this.votes).length
+    this.result = null
   }
 }

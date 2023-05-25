@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import { type GetServerSideProps } from 'next'
 import { useSession } from 'next-auth/react'
 import { FiCheck } from 'react-icons/fi'
@@ -8,7 +9,6 @@ import { Layout } from '~/components/Layout/Layout'
 import { ALLOWED_VOTES } from '~/core/Vote'
 import { useRoom } from '~/hooks/useRoom'
 import { createSsrHelper } from '~/server/api/ssrHelper'
-import { trpc } from '~/utils/trpc'
 import { z } from '~/utils/zod'
 
 type RoomProps = {
@@ -17,34 +17,50 @@ type RoomProps = {
 
 export default function Room({ roomId }: RoomProps) {
   const session = useSession()
-  const { data: room } = trpc.room.getRoom.useQuery({ roomId })
-  const { mutate: vote } = trpc.room.vote.useMutation()
-  const { mutate: finishVoting } = trpc.room.finishVoting.useMutation()
-  const { mutate: resetVoting } = trpc.room.resetVoting.useMutation()
-
-  const { users } = useRoom({ roomId })
+  const {
+    actions: { finishVoting, resetVoting, vote },
+    room,
+  } = useRoom({ roomId })
 
   if (!room) {
     return null
   }
 
-  const isOwner = room.ownerUserId === session.data?.user.id
+  const { myVote, name, ownerId, result, users } = room
+
+  const isOwner = ownerId === session.data?.user.id
 
   return (
     <Layout>
       <div className="flex flex-wrap justify-between gap-4">
         <div>
-          <h2 className="mb-4 text-3xl">{room.name}</h2>
-          <div className="inline-grid grid-cols-3 gap-4">
-            {ALLOWED_VOTES.map((value) => (
-              <Card
-                key={value}
-                onClick={() => {
-                  vote({ roomId, vote: value })
-                }}
-                value={value}
-              />
-            ))}
+          <h2 className="mb-4 text-3xl">{name}</h2>
+          <div className="relative">
+            <div className="inline-grid grid-cols-3 gap-4">
+              {ALLOWED_VOTES.map((value) => (
+                <Card
+                  isChecked={value === myVote}
+                  key={value}
+                  onClick={() => {
+                    vote({ roomId, vote: value })
+                  }}
+                  value={value}
+                />
+              ))}
+            </div>
+
+            <div
+              className={classNames(
+                'absolute inset-0 flex scale-105 flex-col items-center justify-center rounded bg-slate-500/[.9] transition-opacity duration-300',
+                {
+                  '-z-10 opacity-0': !result,
+                  'opacity-1 z-0': result,
+                }
+              )}
+            >
+              <div className="mb-2 text-4xl">Result</div>
+              <div className="text-3xl">{result}</div>
+            </div>
           </div>
         </div>
 
@@ -55,7 +71,7 @@ export default function Room({ roomId }: RoomProps) {
               {users.map((user) => (
                 <li className="flex items-center justify-between gap-2" key={user.userId}>
                   <span>{user.name}</span>
-                  <FiCheck />
+                  {typeof user.vote === 'boolean' ? user.vote && <FiCheck /> : user.vote}
                 </li>
               ))}
             </ul>

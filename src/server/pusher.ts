@@ -1,6 +1,7 @@
 import Pusher from 'pusher'
 
 import { env } from '~/env.mjs'
+import { Events, getRoomChannelName } from '~/utils/events'
 
 const globalForPusher = globalThis as unknown as { pusher: Pusher }
 
@@ -15,3 +16,9 @@ export const pusher =
   })
 
 if (env.NODE_ENV !== 'production') globalForPusher.pusher = pusher
+
+export const events = {
+  roomUpdated(roomId: string) {
+    return pusher.trigger(getRoomChannelName(roomId), Events.RoomUpdated, null)
+  },
+}

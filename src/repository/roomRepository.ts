@@ -1,27 +1,25 @@
-import {
-  type PrismaClient,
-  type Room as RoomEntity,
-  type RoomUser as UserEntity,
-  type Vote as VoteEntity,
-} from '@prisma/client'
+import { type PrismaClient, type Room as RoomEntity } from '@prisma/client'
 
 import Room from '~/core/Room'
-import User from '~/core/User'
+import type User from '~/core/User'
+import { ALLOWED_VOTES } from '~/core/Vote'
+import { z } from '~/utils/zod'
 
-function mapRoomEntityToModel(room: RoomEntity & { users: UserEntity[]; votes: VoteEntity[] }): Room {
-  const users = room.users.map((user) => User.create({ id: user.userId, name: user.name }))
-  const owner = users.find((user) => user.userId === room.ownerId)
+function mapRoomEntityToModel(room: RoomEntity): Room {
+  const roomModel = Room.create({ name: room.name, ownerId: room.ownerId, roomId: room.roomId })
 
-  if (!owner) {
-    throw new Error()
+  room.users.forEach((userId) => {
+    roomModel.connect(userId)
+  })
+
+  const parsedVotes = z.record(z.string(), z.enum(ALLOWED_VOTES)).parse(room.votes ?? {})
+  Object.entries(parsedVotes).forEach(([userId, vote]) => {
+    roomModel.vote(userId, vote)
+  })
+
+  if (room.result !== null) {
+    roomModel.finish(room.ownerId)
   }
-
-  const roomModel = Room.create({ name: room.name, owner, roomId: room.roomId })
-  users
-    .filter((user) => user.userId !== room.ownerId)
-    .forEach((user) => {
-      roomModel.connect(user)
-    })
 
   return roomModel
 }
@@ -32,16 +30,12 @@ export default function createRoomRepository(prisma: PrismaClient) {
       await prisma.room.create({
         data: {
           name: room.name,
-          ownerId: room.owner.userId,
+          ownerId: room.ownerId,
+          result: room.getResult(),
           roomId: room.roomId,
+          users: room.getUsers(),
+          votes: room.getVotes(),
         },
-      })
-      await prisma.roomUser.createMany({
-        data: room.connectedUsers.map((user) => ({
-          name: user.name,
-          roomId: room.roomId,
-          userId: user.userId,
-        })),
       })
 
       return room
@@ -55,10 +49,6 @@ export default function createRoomRepository(prisma: PrismaClient) {
     },
     async getRoom(roomId: string) {
       const room = await prisma.room.findUniqueOrThrow({
-        include: {
-          users: true,
-          votes: true,
-        },
         where: {
           roomId,
         },
@@ -68,10 +58,6 @@ export default function createRoomRepository(prisma: PrismaClient) {
     },
     async getUserRooms(user: User) {
       const rooms = await prisma.room.findMany({
-        include: {
-          users: true,
-          votes: true,
-        },
         where: {
           ownerId: user.userId,
         },
@@ -83,24 +69,15 @@ export default function createRoomRepository(prisma: PrismaClient) {
       await prisma.room.update({
         data: {
           name: room.name,
-          ownerId: room.owner.userId,
+          ownerId: room.ownerId,
+          result: room.getResult(),
           roomId: room.roomId,
+          users: room.getUsers(),
+          votes: room.getVotes(),
         },
         where: {
           roomId: room.roomId,
         },
-      })
-      await prisma.roomUser.deleteMany({
-        where: {
-          roomId: room.roomId,
-        },
-      })
-      await prisma.roomUser.createMany({
-        data: room.connectedUsers.map((user) => ({
-          name: user.name,
-          roomId: room.roomId,
-          userId: user.userId,
-        })),
       })
     },
   }

@@ -2,6 +2,8 @@ import { sha256 } from 'js-sha256'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 
 import { env } from '~/env.mjs'
+import { createContext } from '~/server/api/createContext'
+import { getRoomFromChannel } from '~/utils/events'
 import { z } from '~/utils/zod'
 
 function readBody(req: NextApiRequest): Promise<string> {
@@ -18,15 +20,17 @@ function readBody(req: NextApiRequest): Promise<string> {
   })
 }
 
-const bodySchema = z.object({
-  events: z
-    .object({
-      channel: z.string().min(1),
-      name: z.enum(['member_added', 'member_removed']),
-      user_id: z.string().min(1),
-    })
-    .array(),
-})
+const bodySchema = z
+  .object({
+    events: z
+      .object({
+        channel: z.string().min(1),
+        name: z.enum(['member_added', 'member_removed']),
+        user_id: z.string().min(1),
+      })
+      .array(),
+  })
+  .passthrough()
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.headers['x-pusher-key'] !== env.NEXT_PUBLIC_PUSHER_KEY) {
@@ -47,8 +51,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { events } = parsedBody.data
+  const { repository } = await createContext({ req, res })
 
-  console.log(events)
+  for (const event of events) {
+    const room = await repository.room.getRoom(getRoomFromChannel(event.channel))
+
+    switch (event.name) {
+      case 'member_added':
+        room.connect(event.user_id)
+        break
+      case 'member_removed':
+        room.disconnect(event.user_id)
+        break
+    }
+
+    await repository.room.updateRoom(room)
+  }
 
   res.status(200).end()
 }

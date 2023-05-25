@@ -4,7 +4,6 @@ import { env } from '~/env.mjs'
 import { createContext } from '~/server/api/createContext'
 import { appRouter } from '~/server/api/routers'
 
-// export API handler
 export default createNextApiHandler({
   createContext,
   onError:

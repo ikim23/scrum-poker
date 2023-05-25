@@ -1,10 +1,10 @@
 import { TRPCError } from '@trpc/server'
+import { mapValues } from 'lodash'
 import { nanoid } from 'nanoid/async'
 
 import Room from '~/core/Room'
 import { ALLOWED_VOTES } from '~/core/Vote'
 import { createRouter, userProcedure } from '~/server/api/trpc'
-import { Events, getRoomChannelName } from '~/utils/events'
 import { z } from '~/utils/zod'
 
 export const roomRouter = createRouter({
@@ -16,7 +16,7 @@ export const roomRouter = createRouter({
     )
     .mutation(async ({ ctx: { repository, user }, input: { name } }) => {
       const roomId = await nanoid()
-      const room = Room.create({ name, owner: user, roomId })
+      const room = Room.create({ name, ownerId: user.userId, roomId })
 
       await repository.room.createRoom(room)
 
@@ -35,7 +35,7 @@ export const roomRouter = createRouter({
         throw new TRPCError({ code: 'NOT_FOUND' })
       }
 
-      if (room.owner.userId !== user.userId) {
+      if (room.ownerId !== user.userId) {
         throw new TRPCError({ code: 'UNAUTHORIZED' })
       }
 
@@ -47,16 +47,18 @@ export const roomRouter = createRouter({
         roomId: z.nanoId(),
       })
     )
-    .mutation(async ({ ctx: { repository, user }, input: { roomId } }) => {
+    .mutation(async ({ ctx: { events, repository, user }, input: { roomId } }) => {
       const room = await repository.room.getRoom(roomId)
 
       if (!room) {
         throw new TRPCError({ code: 'NOT_FOUND' })
       }
 
-      const average = room.finish(user)
+      const average = room.finish(user.userId)
 
       await repository.room.updateRoom(room)
+
+      await events.roomUpdated(roomId)
 
       return average
     }),
@@ -66,20 +68,22 @@ export const roomRouter = createRouter({
         roomId: z.nanoId(),
       })
     )
-    .query(async ({ ctx: { repository }, input: { roomId } }) => {
+    .query(async ({ ctx: { repository, user }, input: { roomId } }) => {
       const room = await repository.room.getRoom(roomId)
 
       if (!room) {
         throw new TRPCError({ code: 'NOT_FOUND' })
       }
 
+      const result = room.getResult()
+
       return {
-        connectedUsers: room.connectedUsers.map((user) => ({
-          name: user.name,
-          userId: user.userId,
-        })),
+        myVote: room.getVotes()[user.userId] ?? false,
         name: room.name,
-        ownerUserId: room.owner.userId,
+        ownerUserId: room.ownerId,
+        result,
+        userIdsWithVotes: room.usersWithVotes,
+        votes: result ? room.getVotes() : mapValues(room.getVotes(), (value) => Boolean(value)),
       }
     }),
   getRooms: userProcedure.query(async ({ ctx: { repository, user } }) => {
@@ -93,16 +97,17 @@ export const roomRouter = createRouter({
         roomId: z.nanoId(),
       })
     )
-    .mutation(async ({ ctx: { repository, user }, input: { roomId } }) => {
+    .mutation(async ({ ctx: { events, repository, user }, input: { roomId } }) => {
       const room = await repository.room.getRoom(roomId)
 
       if (!room) {
         throw new TRPCError({ code: 'NOT_FOUND' })
       }
 
-      room.reset(user)
+      room.reset(user.userId)
 
       await repository.room.updateRoom(room)
+      await events.roomUpdated(roomId)
     }),
   vote: userProcedure
     .input(
@@ -111,19 +116,19 @@ export const roomRouter = createRouter({
         vote: z.enum(ALLOWED_VOTES),
       })
     )
-    .mutation(async ({ ctx: { pusher, repository, user }, input: { roomId, vote } }) => {
+    .mutation(async ({ ctx: { events, repository, user }, input: { roomId, vote } }) => {
       const room = await repository.room.getRoom(roomId)
 
       if (!room) {
         throw new TRPCError({ code: 'NOT_FOUND' })
       }
 
-      room.vote(user, vote)
+      room.vote(user.userId, vote)
 
       await repository.room.updateRoom(room)
-      await pusher.trigger(getRoomChannelName(roomId), Events.UserVoted, {
-        userId: user.userId,
-        vote,
-      })
+
+      await events.roomUpdated(roomId)
+
+      return vote
     }),
 })
