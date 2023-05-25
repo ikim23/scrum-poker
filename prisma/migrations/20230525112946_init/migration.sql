@@ -1,11 +1,11 @@
 -- CreateTable
 CREATE TABLE "Room" (
-    "roomId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "ownerId" TEXT NOT NULL,
-    "users" TEXT[],
+    "roomId" VARCHAR(21) NOT NULL,
+    "ownerId" VARCHAR(64) NOT NULL,
+    "name" VARCHAR(64) NOT NULL,
+    "connectedUsers" TEXT[],
     "votes" JSONB NOT NULL,
-    "result" INTEGER,
+    "result" SMALLINT,
 
     CONSTRAINT "Room_pkey" PRIMARY KEY ("roomId")
 );
