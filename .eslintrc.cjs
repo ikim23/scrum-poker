@@ -1,7 +1,7 @@
 /** @type {import("eslint").Linter.Config} */
 module.exports = {
   extends: ['next/core-web-vitals', 'plugin:@typescript-eslint/recommended'],
-  ignorePatterns: ['src/db'],
+  ignorePatterns: ['src/server/db/types.ts'],
   overrides: [
     {
       extends: ['plugin:@typescript-eslint/recommended-requiring-type-checking'],

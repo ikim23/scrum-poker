@@ -17,7 +17,7 @@ export const roomRouter = createRouter({
       const roomId = await nanoid()
       const room = Room.create({ name, ownerId: user.userId, roomId })
 
-      await repository.room.createRoom(room)
+      await repository.room.create(room)
 
       return room
     }),
@@ -28,7 +28,7 @@ export const roomRouter = createRouter({
       })
     )
     .mutation(async ({ ctx: { repository, user }, input: { roomId } }) => {
-      const room = await repository.room.getRoom(roomId)
+      const room = await repository.room.find(roomId)
 
       if (!room) {
         throw new TRPCError({ code: 'NOT_FOUND' })
@@ -38,7 +38,7 @@ export const roomRouter = createRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED' })
       }
 
-      await repository.room.deleteRoom(roomId)
+      await repository.room.delete(roomId)
     }),
   finishVoting: userProcedure
     .input(
@@ -47,19 +47,16 @@ export const roomRouter = createRouter({
       })
     )
     .mutation(async ({ ctx: { events, repository, user }, input: { roomId } }) => {
-      const room = await repository.room.getRoom(roomId)
+      const room = await repository.room.find(roomId)
 
       if (!room) {
         throw new TRPCError({ code: 'NOT_FOUND' })
       }
 
-      const average = room.finish(user.userId)
+      room.finish(user.userId)
 
-      await repository.room.updateRoom(room)
-
+      await repository.room.save(room)
       await events.roomUpdated(roomId)
-
-      return average
     }),
   getRoom: userProcedure
     .input(
@@ -68,7 +65,7 @@ export const roomRouter = createRouter({
       })
     )
     .query(async ({ ctx: { repository, user }, input: { roomId } }) => {
-      const room = await repository.room.getRoom(roomId)
+      const room = await repository.room.find(roomId)
 
       if (!room) {
         throw new TRPCError({ code: 'NOT_FOUND' })
@@ -79,7 +76,7 @@ export const roomRouter = createRouter({
       return {
         myVote: room.getVotes()[user.userId] ?? false,
         name: room.name,
-        ownerUserId: room.ownerId,
+        ownerId: room.ownerId,
         result,
         votes: result
           ? room.getVotes()
@@ -87,9 +84,12 @@ export const roomRouter = createRouter({
       }
     }),
   getRooms: userProcedure.query(async ({ ctx: { repository, user } }) => {
-    const rooms = await repository.room.getUserRooms(user)
+    const rooms = await repository.room.findMany(user)
 
-    return rooms
+    return rooms.map((room) => ({
+      name: room.name,
+      roomId: room.roomId,
+    }))
   }),
   resetVoting: userProcedure
     .input(
@@ -98,7 +98,7 @@ export const roomRouter = createRouter({
       })
     )
     .mutation(async ({ ctx: { events, repository, user }, input: { roomId } }) => {
-      const room = await repository.room.getRoom(roomId)
+      const room = await repository.room.find(roomId)
 
       if (!room) {
         throw new TRPCError({ code: 'NOT_FOUND' })
@@ -106,7 +106,7 @@ export const roomRouter = createRouter({
 
       room.reset(user.userId)
 
-      await repository.room.updateRoom(room)
+      await repository.room.save(room)
       await events.roomUpdated(roomId)
     }),
   vote: userProcedure
@@ -117,7 +117,7 @@ export const roomRouter = createRouter({
       })
     )
     .mutation(async ({ ctx: { events, repository, user }, input: { roomId, vote } }) => {
-      const room = await repository.room.getRoom(roomId)
+      const room = await repository.room.find(roomId)
 
       if (!room) {
         throw new TRPCError({ code: 'NOT_FOUND' })
@@ -125,8 +125,7 @@ export const roomRouter = createRouter({
 
       room.vote(user.userId, vote)
 
-      await repository.room.updateRoom(room)
-
+      await repository.room.save(room)
       await events.roomUpdated(roomId)
 
       return vote

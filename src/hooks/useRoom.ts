@@ -100,7 +100,7 @@ export function useRoom({ roomId }: UseRoomProps) {
     },
     room: room
       ? {
-          isOwner: room.ownerUserId === session.data?.user.id,
+          isOwner: room.ownerId === session.data?.user.id,
           myVote: room.myVote,
           name: room.name,
           result: room.result,

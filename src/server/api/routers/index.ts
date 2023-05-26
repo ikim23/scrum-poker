@@ -1,5 +1,5 @@
-import { pusherRouter } from '~/server/api/routers/pusher'
-import { roomRouter } from '~/server/api/routers/room'
+import { pusherRouter } from '~/server/api/routers/pusherRouter'
+import { roomRouter } from '~/server/api/routers/roomRouter'
 import { createRouter } from '~/server/api/trpc'
 
 export const appRouter = createRouter({

@@ -1,8 +1,9 @@
 import { Kysely } from 'kysely'
 import { NeonDialect } from 'kysely-neon'
 
-import { type DB } from '~/db/types'
 import { env } from '~/env.mjs'
+
+import { type DB } from './types'
 
 const globalForDb = globalThis as unknown as { db: Kysely<DB> }
 

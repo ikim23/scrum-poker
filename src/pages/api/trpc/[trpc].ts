@@ -5,7 +5,7 @@ import { createContext } from '~/server/api/createContext'
 import { appRouter } from '~/server/api/routers'
 
 export default createNextApiHandler({
-  createContext,
+  createContext: (context) => createContext(context.req, context.res),
   onError:
     env.NODE_ENV === 'development'
       ? ({ error, path }) => {

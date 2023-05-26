@@ -2,7 +2,7 @@ import { type NextApiRequest, type NextApiResponse } from 'next'
 
 import { env } from '~/env.mjs'
 import { createContext } from '~/server/api/createContext'
-import { getRoomFromChannel } from '~/utils/events'
+import { getRoomIdFromChannelName } from '~/utils/events'
 import { z } from '~/utils/zod'
 
 function readBody(req: NextApiRequest): Promise<string> {
@@ -64,21 +64,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { events } = parsedBody.data
-  const { repository } = await createContext({ req, res })
+  const { repository } = await createContext(req, res)
 
   for (const event of events) {
-    const room = await repository.room.getRoom(getRoomFromChannel(event.channel))
+    const room = await repository.room.find(getRoomIdFromChannelName(event.channel))
 
     switch (event.name) {
       case 'member_added':
-        room.connect(event.user_id)
+        if (room.canConnect(event.user_id)) {
+          room.connect(event.user_id)
+          await repository.room.save(room)
+        }
         break
+
       case 'member_removed':
-        room.disconnect(event.user_id)
+        if (room.canDisconnect(event.user_id)) {
+          room.disconnect(event.user_id)
+          await repository.room.save(room)
+        }
         break
     }
-
-    await repository.room.updateRoom(room)
   }
 
   res.status(200).end()

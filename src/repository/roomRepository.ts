@@ -3,31 +3,31 @@ import { type Kysely } from 'kysely'
 import Room from '~/core/Room'
 import type User from '~/core/User'
 import { ALLOWED_VOTES } from '~/core/Vote'
-import { type DB, type Room as RoomEntity } from '~/db/types'
+import { type DB, type Room as RoomEntity } from '~/server/db/types'
 import { z } from '~/utils/zod'
 
-function mapRoomEntityToModel(room: RoomEntity): Room {
-  const roomModel = Room.create({ name: room.name, ownerId: room.ownerId, roomId: room.roomId })
+function mapRoomEntityToModel(entity: RoomEntity): Room {
+  const room = Room.create({ name: entity.name, ownerId: entity.ownerId, roomId: entity.roomId })
 
-  room.connectedUsers.forEach((userId) => {
-    roomModel.connect(userId)
+  entity.connectedUsers.forEach((userId) => {
+    room.connect(userId)
   })
 
-  const parsedVotes = z.record(z.string(), z.enum(ALLOWED_VOTES)).parse(room.votes ?? {})
+  const parsedVotes = z.record(z.string(), z.enum(ALLOWED_VOTES)).parse(entity.votes ?? {})
   Object.entries(parsedVotes).forEach(([userId, vote]) => {
-    roomModel.vote(userId, vote)
+    room.vote(userId, vote)
   })
 
-  if (room.result !== null) {
-    roomModel.finish(room.ownerId)
+  if (entity.result !== null) {
+    room.finish(entity.ownerId)
   }
 
-  return roomModel
+  return room
 }
 
 export default function createRoomRepository(db: Kysely<DB>) {
   return {
-    async createRoom(room: Room) {
+    async create(room: Room) {
       await db
         .insertInto('Room')
         .values({
@@ -42,20 +42,20 @@ export default function createRoomRepository(db: Kysely<DB>) {
 
       return room
     },
-    async deleteRoom(roomId: string) {
+    async delete(roomId: string) {
       await db.deleteFrom('Room').where('Room.roomId', '=', roomId).execute()
     },
-    async getRoom(roomId: string) {
+    async find(roomId: string) {
       const room = await db.selectFrom('Room').selectAll().where('Room.roomId', '=', roomId).executeTakeFirstOrThrow()
 
       return mapRoomEntityToModel(room)
     },
-    async getUserRooms(user: User) {
+    async findMany(user: User) {
       const rooms = await db.selectFrom('Room').selectAll().where('Room.ownerId', '=', user.userId).execute()
 
       return rooms.map(mapRoomEntityToModel)
     },
-    async updateRoom(room: Room) {
+    async save(room: Room) {
       await db
         .updateTable('Room')
         .set({
