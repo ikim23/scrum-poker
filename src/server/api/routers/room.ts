@@ -1,5 +1,4 @@
 import { TRPCError } from '@trpc/server'
-import { mapValues } from 'lodash'
 import { nanoid } from 'nanoid/async'
 
 import Room from '~/core/Room'
@@ -82,7 +81,9 @@ export const roomRouter = createRouter({
         name: room.name,
         ownerUserId: room.ownerId,
         result,
-        votes: result ? room.getVotes() : mapValues(room.getVotes(), (value) => Boolean(value)),
+        votes: result
+          ? room.getVotes()
+          : Object.fromEntries(Object.entries(room.getVotes()).map(([userId, vote]) => [userId, Boolean(vote)])),
       }
     }),
   getRooms: userProcedure.query(async ({ ctx: { repository, user } }) => {

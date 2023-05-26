@@ -1,19 +1,13 @@
-import { map } from 'lodash'
 import { useSession } from 'next-auth/react'
-import Pusher, { type PresenceChannel } from 'pusher-js'
+import { type PresenceChannel } from 'pusher-js'
 import { useEffect, useMemo, useState } from 'react'
 
 import { env } from '~/env.mjs'
-import { Events, getRoomChannelName } from '~/utils/events'
+import { Events, getRoomChannelName, type UserInfo } from '~/utils/events'
+import ResolveLater from '~/utils/ResolveLater'
 import { trpc } from '~/utils/trpc'
-import { z, type zod } from '~/utils/zod'
 
-const membersSchema = z.record(
-  z.object({
-    name: z.string(),
-    userId: z.string(),
-  })
-)
+type Members = Record<string, UserInfo>
 
 type UseRoomProps = {
   roomId: string
@@ -24,12 +18,12 @@ export function useRoom({ roomId }: UseRoomProps) {
   const trpcContext = trpc.useContext()
   const { data: room, refetch } = trpc.room.getRoom.useQuery({ roomId }, { enabled: false })
   const { mutate: vote } = trpc.room.vote.useMutation({
-    onMutate(variables) {
+    onMutate(userVote) {
       trpcContext.room.getRoom.setData({ roomId }, (prevRoom) =>
         prevRoom
           ? {
               ...prevRoom,
-              myVote: variables.vote,
+              myVote: userVote.vote,
             }
           : undefined
       )
@@ -40,51 +34,63 @@ export function useRoom({ roomId }: UseRoomProps) {
 
   const { mutate: authorizeChannel } = trpc.pusher.auth.useMutation()
 
-  const [users, setUsers] = useState<zod.infer<typeof membersSchema>>({})
+  const [members, setMembers] = useState<Members>({})
 
   useEffect(() => {
-    const pusher = new Pusher(env.NEXT_PUBLIC_PUSHER_KEY, {
-      channelAuthorization: {
-        customHandler: (params, callback) => {
-          authorizeChannel(params, {
-            onSettled(data, error) {
-              callback(error ? new Error(error.message) : null, data ?? null)
-            },
-          })
-        },
-        // These properties are required by TypeScript, but they are not used since we use `customHandler`.
-        endpoint: '',
-        transport: 'ajax',
-      },
-      cluster: env.NEXT_PUBLIC_PUSHER_CLUSTER,
-    })
-    const channel = pusher.subscribe(getRoomChannelName(roomId)) as PresenceChannel
+    const resolveLaterChannel = new ResolveLater<PresenceChannel>()
 
-    function updateUsers() {
-      setUsers(membersSchema.parse(channel.members.members))
+    async function initPusher() {
+      const Pusher = (await import('pusher-js')).default
+
+      const pusher = new Pusher(env.NEXT_PUBLIC_PUSHER_KEY, {
+        channelAuthorization: {
+          customHandler: (params, callback) => {
+            authorizeChannel(params, {
+              onSettled(data, error) {
+                callback(error ? new Error(error.message) : null, data ?? null)
+              },
+            })
+          },
+          // These properties are required by TypeScript, but they are not used since we use `customHandler`.
+          endpoint: '',
+          transport: 'ajax',
+        },
+        cluster: env.NEXT_PUBLIC_PUSHER_CLUSTER,
+      })
+      const channel = pusher.subscribe(getRoomChannelName(roomId)) as PresenceChannel
+
+      function updateMembers() {
+        setMembers(channel.members.members as Members)
+      }
+
+      channel.bind(Events.SubscriptionSucceeded, updateMembers)
+      channel.bind(Events.MemberAdded, updateMembers)
+      channel.bind(Events.MemberRemoved, updateMembers)
+      channel.bind(Events.RoomUpdated, () => {
+        void refetch()
+      })
+
+      resolveLaterChannel.setOnce(channel)
     }
 
-    channel.bind(Events.SubscriptionSucceeded, updateUsers)
-    channel.bind(Events.MemberAdded, updateUsers)
-    channel.bind(Events.MemberRemoved, updateUsers)
-    channel.bind(Events.RoomUpdated, () => {
-      void refetch()
-    })
+    void initPusher()
 
     return () => {
-      channel.unbind()
-      channel.disconnect()
+      resolveLaterChannel.resolve((channel) => {
+        channel.unbind()
+        channel.disconnect()
+      })
     }
-  }, [roomId, authorizeChannel, setUsers, refetch])
+  }, [roomId, authorizeChannel, setMembers, refetch])
 
-  const usersList = useMemo(() => {
+  const users = useMemo(() => {
     const userVotes = room?.votes ?? {}
 
-    return map(users, (user) => ({
+    return Object.values(members).map((user) => ({
       ...user,
       vote: userVotes[user.userId] ?? false,
     }))
-  }, [room?.votes, users])
+  }, [room?.votes, members])
 
   return {
     actions: {
@@ -98,7 +104,7 @@ export function useRoom({ roomId }: UseRoomProps) {
           myVote: room.myVote,
           name: room.name,
           result: room.result,
-          users: usersList,
+          users,
         }
       : null,
   }

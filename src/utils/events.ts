@@ -5,6 +5,11 @@ export const Events = {
   SubscriptionSucceeded: 'pusher:subscription_succeeded',
 } as const
 
+export type UserInfo = {
+  name: string
+  userId: string
+}
+
 export function getRoomChannelName(roomId: string) {
   return `presence-${roomId}`
 }
