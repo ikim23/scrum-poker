@@ -11,7 +11,7 @@ export function Layout({ children }: PropsWithChildren) {
   const callbackUrl = (router.query.callback as string | undefined) ?? '/rooms'
 
   return (
-    <main className="min-h-screen bg-gray-900">
+    <main className="grid min-h-screen grid-rows-[auto_1fr] bg-gray-900">
       <header className=" flex items-center border-b-2 border-solid border-gray-700 bg-gray-800 px-10 py-6">
         <span className="mr-auto text-2xl">Scrum Poker</span>
         {session.status === 'authenticated' ? (
@@ -37,7 +37,7 @@ export function Layout({ children }: PropsWithChildren) {
           </Button>
         )}
       </header>
-      <div className="px-10 pb-10 pt-6">{children}</div>
+      <div className="container mx-auto p-10">{children}</div>
     </main>
   )
 }

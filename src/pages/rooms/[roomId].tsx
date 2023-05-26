@@ -1,10 +1,13 @@
 import classNames from 'classnames'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { FiCheck } from 'react-icons/fi'
 
 import { Button } from '~/components/Button/Button'
 import { Card } from '~/components/Card/Card'
+import { Center } from '~/components/Center/Center'
 import { Layout } from '~/components/Layout/Layout'
+import { Spinner } from '~/components/Spinner/Spinner'
 import { ALLOWED_VOTES } from '~/core/Vote'
 import { useRoom } from '~/hooks/useRoom'
 import { trpc } from '~/utils/trpc'
@@ -19,6 +22,7 @@ function Room({ roomId }: RoomProps) {
     room,
   } = useRoom({ roomId })
 
+  // This will never be `true`. It is here just for the TypeScript.
   if (!room) {
     return null
   }
@@ -53,8 +57,8 @@ function Room({ roomId }: RoomProps) {
                 }
               )}
             >
-              <div className="mb-2 text-4xl">Result</div>
-              <div className="text-3xl">{result}</div>
+              <h3 className="mb-2 text-4xl">Result</h3>
+              <p className="text-3xl">{result}</p>
             </div>
           </div>
         </div>
@@ -98,21 +102,37 @@ function Room({ roomId }: RoomProps) {
 export default function RoomWrapper() {
   const router = useRouter()
   const roomId = router.query.roomId as string
+  const isValidRoomId = typeof roomId === 'string' && /^[\w-]{21}$/.test(roomId)
 
   const { isError, isLoading } = trpc.room.getRoom.useQuery(
     { roomId },
     {
-      enabled: typeof roomId === 'string',
+      enabled: isValidRoomId,
       retry: false,
     }
   )
 
-  if (isLoading) {
-    return <Layout>Loading...</Layout>
+  if (!isValidRoomId || isError) {
+    return (
+      <Layout>
+        <Center>
+          <h2 className="mb-8 text-4xl">Room does not exist</h2>
+          <Link href="/rooms">
+            <Button>Go back to your Rooms</Button>
+          </Link>
+        </Center>
+      </Layout>
+    )
   }
 
-  if (isError) {
-    return <Layout>Error</Layout>
+  if (isLoading) {
+    return (
+      <Layout>
+        <Center>
+          <Spinner size="lg" />
+        </Center>
+      </Layout>
+    )
   }
 
   return <Room roomId={roomId} />
