@@ -60,7 +60,8 @@ export function useRoom({ roomId }: UseRoomProps) {
       const channel = pusher.subscribe(getRoomChannelName(roomId)) as PresenceChannel
 
       function updateMembers() {
-        setMembers(channel.members.members as Members)
+        // Destructure, because `members` variable does not change it's reference which does not trigger the `useMemo`.
+        setMembers({ ...(channel.members.members as Members) })
       }
 
       channel.bind(Events.SubscriptionSucceeded, updateMembers)
