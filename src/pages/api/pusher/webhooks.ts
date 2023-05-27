@@ -1,23 +1,10 @@
-import { type NextApiRequest, type NextApiResponse } from 'next'
+import { type NextRequest, NextResponse } from 'next/server'
 
 import { env } from '~/env.mjs'
-import { createContext } from '~/server/api/createContext'
+import createRoomRepository from '~/repository/roomRepository'
+import { db } from '~/server/db'
 import { getRoomIdFromChannelName } from '~/utils/events'
 import { z } from '~/utils/zod'
-
-function readBody(req: NextApiRequest): Promise<string> {
-  return new Promise((resolve) => {
-    let data = ''
-
-    req
-      .on('data', (chunk) => {
-        data += chunk
-      })
-      .on('end', () => {
-        resolve(Buffer.from(data).toString())
-      })
-  })
-}
 
 async function isBodySignatureValid(body: string, signature: unknown) {
   if (typeof signature !== 'string') {
@@ -42,55 +29,58 @@ const bodySchema = z.object({
       name: z.enum(['member_added', 'member_removed']),
       user_id: z.string().min(1),
     })
-    .array(),
+    .array()
+    .min(1),
 })
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.headers['x-pusher-key'] !== env.NEXT_PUBLIC_PUSHER_KEY) {
-    return res.status(400).send({ reason: 'Key does not match' })
+export default async function handler(req: NextRequest) {
+  if (req.headers.get('x-pusher-key') !== env.NEXT_PUBLIC_PUSHER_KEY) {
+    return NextResponse.json({ reason: 'Key does not match' }, { status: 400 })
   }
 
-  const body = await readBody(req)
-  const isValid = await isBodySignatureValid(body, req.headers['x-pusher-signature'])
+  const body = await req.text()
+  const isValid = await isBodySignatureValid(body, req.headers.get('x-pusher-signature'))
 
   if (!isValid) {
-    return res.status(400).send({ reason: 'Signature does not match' })
+    return NextResponse.json({ reason: 'Signature does not match' }, { status: 400 })
   }
 
   const parsedBody = bodySchema.safeParse(JSON.parse(body))
 
   if (!parsedBody.success) {
-    return res.status(400).send({ reason: parsedBody.error })
+    return NextResponse.json({ reason: parsedBody.error }, { status: 400 })
   }
 
   const { events } = parsedBody.data
-  const { repository } = await createContext(req, res)
+  const repository = createRoomRepository(db)
 
   for (const event of events) {
-    const room = await repository.room.find(getRoomIdFromChannelName(event.channel))
+    const room = await repository.find(getRoomIdFromChannelName(event.channel))
 
     switch (event.name) {
       case 'member_added':
         if (room.canConnect(event.user_id)) {
           room.connect(event.user_id)
-          await repository.room.save(room)
+          await repository.save(room)
         }
         break
 
       case 'member_removed':
         if (room.canDisconnect(event.user_id)) {
           room.disconnect(event.user_id)
-          await repository.room.save(room)
+          await repository.save(room)
         }
         break
     }
   }
 
-  res.status(200).end()
+  return NextResponse.next({ status: 200 })
 }
 
 export const config = {
   api: {
     bodyParser: false,
   },
+  regions: ['fra1'],
+  runtime: 'edge',
 }

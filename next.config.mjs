@@ -18,8 +18,19 @@ function withSentry(nextConfig) {
 }
 
 /** @type {import("next").NextConfig} */
-const config = {
+const nextConfig = {
   reactStrictMode: true,
+  webpack(webpackConfig, options) {
+    // Ignore `cloudflare:sockets` because they break the Edge runtime.
+    // https://github.com/brianc/node-postgres/issues/2975#issuecomment-1550268806
+    webpackConfig.plugins.push(
+      new options.webpack.IgnorePlugin({
+        resourceRegExp: /^cloudflare:sockets$/,
+      })
+    )
+
+    return webpackConfig
+  },
 }
 
-export default withSentry(config)
+export default withSentry(nextConfig)
