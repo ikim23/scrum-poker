@@ -70,7 +70,7 @@ function Room({ roomId }: RoomProps) {
               {users.map((user) => (
                 <li className="flex items-center justify-between gap-2" key={user.userId}>
                   <span>{user.name}</span>
-                  {typeof user.vote === 'boolean' ? user.vote && <FiCheck /> : user.vote}
+                  {user.vote === true ? <FiCheck /> : user.vote}
                 </li>
               ))}
             </ul>

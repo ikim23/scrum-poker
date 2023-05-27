@@ -32,7 +32,7 @@ export function useRoom({ roomId }: UseRoomProps) {
   const { mutate: finishVoting } = trpc.room.finishVoting.useMutation()
   const { mutate: resetVoting } = trpc.room.resetVoting.useMutation()
 
-  const { mutate: authorizeChannel } = trpc.pusher.auth.useMutation()
+  const { mutate: authorizeChannel } = trpc.room.auth.useMutation()
 
   const [members, setMembers] = useState<Members>({})
 
