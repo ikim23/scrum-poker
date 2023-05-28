@@ -1,22 +1,21 @@
 import '~/styles/globals.css'
 
+import { ClerkProvider } from '@clerk/nextjs'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { type AppType } from 'next/app'
 import Head from 'next/head'
-import { type Session } from 'next-auth'
-import { SessionProvider } from 'next-auth/react'
 
 import { trpc } from '~/utils/trpc'
 
-const App: AppType<{ session: Session | null }> = ({ Component, pageProps: { session, ...pageProps } }) => {
+const App: AppType = ({ Component, pageProps }) => {
   return (
     <>
       <Head>
         <title>Scrum Poker</title>
       </Head>
-      <SessionProvider session={session}>
+      <ClerkProvider {...pageProps}>
         <Component {...pageProps} />
-      </SessionProvider>
+      </ClerkProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </>
   )

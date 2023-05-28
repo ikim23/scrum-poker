@@ -19,6 +19,9 @@ function withSentry(nextConfig) {
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: Boolean(process.env.CI),
+  },
   reactStrictMode: true,
   webpack(webpackConfig, options) {
     // Ignore `cloudflare:sockets` because they break the Edge runtime.

@@ -1,4 +1,4 @@
-import { useSession } from 'next-auth/react'
+import { useUser } from '@clerk/nextjs'
 import { type PresenceChannel } from 'pusher-js'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -14,7 +14,7 @@ type UseRoomProps = {
 }
 
 export function useRoom({ roomId }: UseRoomProps) {
-  const session = useSession()
+  const user = useUser()
   const trpcContext = trpc.useContext()
   const { data: room, refetch } = trpc.room.getRoom.useQuery({ roomId }, { enabled: false })
   const { mutate: vote } = trpc.room.vote.useMutation({
@@ -101,7 +101,7 @@ export function useRoom({ roomId }: UseRoomProps) {
     },
     room: room
       ? {
-          isOwner: room.ownerId === session.data?.user.id,
+          isOwner: room.ownerId === user.user?.id,
           myVote: room.myVote,
           name: room.name,
           result: room.result,

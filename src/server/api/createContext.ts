@@ -1,19 +1,18 @@
-import { type GetServerSidePropsContext } from 'next'
+import { auth as getAuth } from '@clerk/nextjs'
 
 import createRoomRepository from '~/repository/roomRepository'
-import { getServerAuthSession } from '~/server/auth'
 import { db } from '~/server/db'
 import { events, pusher } from '~/server/pusher'
 
-export const createContext = async (req: GetServerSidePropsContext['req'], res: GetServerSidePropsContext['res']) => {
-  const session = await getServerAuthSession(req, res)
+export function createContext() {
+  const auth = getAuth()
 
   return {
+    auth,
     events,
     pusher,
     repository: {
       room: createRoomRepository(db),
     },
-    session,
   }
 }

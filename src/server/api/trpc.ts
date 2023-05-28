@@ -12,15 +12,16 @@ const trpc = initTRPC.context<typeof createContext>().create({
 })
 
 const enforceIsAuthorized = trpc.middleware(({ ctx, next }) => {
-  if (!ctx.session || !ctx.session.user) {
+  const id = ctx.auth.userId
+  const email = ctx.auth.sessionClaims?.email
+
+  if (!id || typeof email !== 'string') {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
 
-  const { user } = ctx.session
-
   return next({
     ctx: {
-      user: User.create({ id: user.id, name: user.email }),
+      user: User.create({ id, name: email }),
     },
   })
 })

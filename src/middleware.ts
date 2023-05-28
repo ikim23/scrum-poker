@@ -1,37 +1,17 @@
-import { type NextRequest, NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
-import { nextBasicAuthMiddleware } from 'nextjs-basic-auth-middleware'
+import { authMiddleware } from '@clerk/nextjs'
+import { NextResponse } from 'next/server'
 
-import { env } from '~/env.mjs'
+export default authMiddleware({
+  afterAuth(auth, req) {
+    if (auth.isPublicRoute && auth.sessionId) {
+      const { basePath, origin } = req.nextUrl
 
-const signInPage = '/'
-const skipPaths = ['/_next', '/favicon.ico', '/api']
-
-export default async function middleware(req: NextRequest) {
-  const { basePath, origin, pathname, search } = req.nextUrl
-
-  const authResponse = nextBasicAuthMiddleware(undefined, req)
-
-  if (!authResponse.ok && !pathname.startsWith('/api')) {
-    return authResponse
-  }
-
-  if (skipPaths.some((path) => pathname.startsWith(path))) {
-    return NextResponse.next()
-  }
-
-  const token = await getToken({ req, secret: env.NEXTAUTH_SECRET })
-
-  if (pathname === signInPage) {
-    if (token) {
       return NextResponse.redirect(new URL(`${basePath}/rooms`, origin))
     }
-  } else {
-    if (!token) {
-      const signInUrl = new URL(`${basePath}${signInPage}`, origin)
-      signInUrl.searchParams.append('callback', `${basePath}${pathname}${search}`)
+  },
+  publicRoutes: ['/'],
+})
 
-      return NextResponse.redirect(signInUrl)
-    }
-  }
+export const config = {
+  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
 }
