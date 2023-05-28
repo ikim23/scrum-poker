@@ -1,5 +1,3 @@
-import { type NextRequest, NextResponse } from 'next/server'
-
 import { env } from '~/env.mjs'
 import createRoomRepository from '~/repository/roomRepository'
 import { db } from '~/server/db'
@@ -33,22 +31,29 @@ const bodySchema = z.object({
     .min(1),
 })
 
-export default async function handler(req: NextRequest) {
+function response(body: object, status: 200 | 400) {
+  return new Response(JSON.stringify(body), {
+    headers: { 'Content-Type': 'application/json' },
+    status,
+  })
+}
+
+export async function POST(req: Request) {
   if (req.headers.get('x-pusher-key') !== env.NEXT_PUBLIC_PUSHER_KEY) {
-    return NextResponse.json({ reason: 'Key does not match' }, { status: 400 })
+    return response({ reason: 'Key does not match' }, 400)
   }
 
   const body = await req.text()
   const isValid = await isBodySignatureValid(body, req.headers.get('x-pusher-signature'))
 
   if (!isValid) {
-    return NextResponse.json({ reason: 'Signature does not match' }, { status: 400 })
+    return response({ reason: 'Signature does not match' }, 400)
   }
 
   const parsedBody = bodySchema.safeParse(JSON.parse(body))
 
   if (!parsedBody.success) {
-    return NextResponse.json({ reason: parsedBody.error }, { status: 400 })
+    return response({ reason: parsedBody.error }, 400)
   }
 
   const { events } = parsedBody.data
@@ -74,13 +79,7 @@ export default async function handler(req: NextRequest) {
     }
   }
 
-  return NextResponse.next({ status: 200 })
+  return response({ message: 'ok' }, 200)
 }
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-  regions: ['fra1'],
-  runtime: 'edge',
-}
+export const runtime = 'edge'
