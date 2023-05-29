@@ -8,7 +8,7 @@ export default function SignUpPage() {
   return (
     <Layout>
       <Center>
-        <SignUp redirectUrl={Routes.rooms} signInUrl={Routes.signIn} />
+        <SignUp path={Routes.signUp} redirectUrl={Routes.rooms} routing="path" signInUrl={Routes.home} />
       </Center>
     </Layout>
   )

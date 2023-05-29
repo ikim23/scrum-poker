@@ -1,6 +1,5 @@
-import Link from 'next/link'
+import { SignIn } from '@clerk/nextjs'
 
-import { Button } from '~/components/Button/Button'
 import { Center } from '~/components/Center/Center'
 import { Layout } from '~/components/Layout/Layout'
 import { Routes } from '~/routes'
@@ -9,9 +8,7 @@ export default function Home() {
   return (
     <Layout>
       <Center>
-        <Link href={Routes.signIn}>
-          <Button>Sign in</Button>
-        </Link>
+        <SignIn path={Routes.home} redirectUrl={Routes.rooms} routing="path" signUpUrl={Routes.signUp} />
       </Center>
     </Layout>
   )
