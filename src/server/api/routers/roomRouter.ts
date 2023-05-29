@@ -19,6 +19,9 @@ export const roomRouter = createRouter({
       const userInfo: UserInfo = user
 
       const authResponse = pusher.authorizeChannel(socketId, channelName, {
+        // The `id` param is required in `pusher-http-edge` but not in the original `pusher` library.
+        // Leave it here just to make the TypeScript happy.
+        id: user.userId,
         user_id: user.userId,
         user_info: userInfo,
       })
