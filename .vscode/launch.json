@@ -7,7 +7,7 @@
       "type": "node-terminal",
       "request": "launch",
       "cwd": "${workspaceFolder}",
-      "command": "yarn dev",
+      "command": "npm run dev",
       "console": "integratedTerminal"
     }
   ]
