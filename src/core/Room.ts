@@ -16,47 +16,27 @@ export default class Room {
   }
 
   getVotes() {
-    return this.votes
+    return Object.assign({}, this.votes)
   }
 
   getResult() {
     return this.result
   }
 
-  get usersWithVotes() {
-    return Object.keys(this.votes)
-  }
-
-  canConnect(userId: string) {
-    return !this.users.has(userId)
-  }
-
   connect(userId: string) {
-    if (!this.canConnect(userId)) {
-      throw new Error()
-    }
-
     this.users.add(userId)
   }
 
-  canDisconnect(userId: string) {
-    return this.users.has(userId)
-  }
-
   disconnect(userId: string) {
-    if (!this.canDisconnect(userId)) {
-      throw new Error()
-    }
-
     this.users.delete(userId)
   }
 
   vote(userId: string, vote: Vote) {
     if (!this.users.has(userId)) {
-      throw new Error()
+      throw new Error(`User ${userId} is not allowed to vote`)
     }
     if (!ALLOWED_VOTES.includes(vote)) {
-      throw new Error()
+      throw new Error(`${vote} is not allowed vote`)
     }
 
     this.votes[userId] = vote
@@ -64,7 +44,7 @@ export default class Room {
 
   finish(userId: string) {
     if (userId !== this.ownerId) {
-      throw new Error()
+      throw new Error('Only the room owner is allowed to finish voting')
     }
 
     const votes = Object.values(this.votes)
@@ -76,7 +56,7 @@ export default class Room {
 
   reset(userId: string) {
     if (userId !== this.ownerId) {
-      throw new Error()
+      throw new Error('Only the room owner is allowed to reset voting')
     }
 
     this.votes = {}

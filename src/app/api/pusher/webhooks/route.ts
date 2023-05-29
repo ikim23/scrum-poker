@@ -15,7 +15,7 @@ const eventsSchema = z
 
 function response(body: object, status: 200 | 400) {
   return new Response(JSON.stringify(body), {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'content-type': 'application/json' },
     status,
   })
 }
@@ -47,19 +47,15 @@ export async function POST(req: Request) {
 
     switch (event.name) {
       case 'member_added':
-        if (room.canConnect(event.user_id)) {
-          room.connect(event.user_id)
-          await repository.save(room)
-        }
+        room.connect(event.user_id)
         break
 
       case 'member_removed':
-        if (room.canDisconnect(event.user_id)) {
-          room.disconnect(event.user_id)
-          await repository.save(room)
-        }
+        room.disconnect(event.user_id)
         break
     }
+
+    await repository.save(room)
   }
 
   return response({ message: 'ok' }, 200)
