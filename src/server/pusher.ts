@@ -1,4 +1,4 @@
-import Pusher from 'pusher'
+import Pusher from 'pusher-http-edge'
 
 import { env } from '~/env.mjs'
 import { Events, getRoomChannelName } from '~/utils/events'
