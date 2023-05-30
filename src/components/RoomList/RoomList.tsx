@@ -4,6 +4,8 @@ import { FiExternalLink, FiTrash2 } from 'react-icons/fi'
 import { Routes } from '~/routes'
 import { type RouterOutputs, trpc } from '~/utils/trpc'
 
+export const TEMP_PREFIX = 'temp'
+
 type RoomListProps = {
   rooms: RouterOutputs['room']['getRooms']
 }
@@ -30,19 +32,25 @@ export function RoomList({ rooms }: RoomListProps) {
       {rooms.map((room) => (
         <li className="my-2 text-lg" key={room.roomId}>
           <div className="group inline-flex items-center gap-2">
-            <Link className="flex items-center gap-[inherit] hover:underline" href={Routes.room(room.roomId)}>
+            {!room.roomId.startsWith(TEMP_PREFIX) ? (
+              <>
+                <Link className="flex items-center gap-[inherit] hover:underline" href={Routes.room(room.roomId)}>
+                  <span>{room.name}</span>
+                  <FiExternalLink className="inline-block" />
+                </Link>
+                <button
+                  className="invisible rounded p-1 hover:bg-red-500 group-hover:visible"
+                  onClick={() => {
+                    deleteRoom({ roomId: room.roomId })
+                  }}
+                  type="button"
+                >
+                  <FiTrash2 />
+                </button>
+              </>
+            ) : (
               <span>{room.name}</span>
-              <FiExternalLink className="inline-block" />
-            </Link>
-            <button
-              className="invisible rounded p-1 hover:bg-red-500 group-hover:visible"
-              onClick={() => {
-                deleteRoom({ roomId: room.roomId })
-              }}
-              type="button"
-            >
-              <FiTrash2 />
-            </button>
+            )}
           </div>
         </li>
       ))}

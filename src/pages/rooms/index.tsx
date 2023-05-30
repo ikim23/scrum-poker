@@ -2,17 +2,23 @@ import { useState } from 'react'
 
 import { Button } from '~/components/Button/Button'
 import { Layout } from '~/components/Layout/Layout'
-import { RoomList } from '~/components/RoomList/RoomList'
+import { RoomList, TEMP_PREFIX } from '~/components/RoomList/RoomList'
 import { Spinner } from '~/components/Spinner/Spinner'
 import { trpc } from '~/utils/trpc'
 
 export default function Rooms() {
   const [roomName, setRoomName] = useState('')
+  const trpcContext = trpc.useContext()
   const rooms = trpc.room.getRooms.useQuery()
   const createRoom = trpc.room.createRoom.useMutation({
-    onSuccess: () => {
+    onMutate({ name }) {
       setRoomName('')
-      void rooms.refetch()
+      trpcContext.room.getRooms.setData(undefined, (prevRooms) =>
+        prevRooms ? [...prevRooms, { name, roomId: `${TEMP_PREFIX}-${Date.now()}` }] : undefined
+      )
+    },
+    onSuccess() {
+      void trpcContext.room.getRooms.invalidate()
     },
   })
 
