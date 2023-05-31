@@ -18,15 +18,28 @@ export function useRoom({ roomId }: UseRoomProps) {
   const trpcContext = trpc.useContext()
   const { data: room, refetch } = trpc.room.getRoom.useQuery({ roomId }, { enabled: false })
   const { mutate: vote } = trpc.room.vote.useMutation({
-    onMutate(userVote) {
-      trpcContext.room.getRoom.setData({ roomId }, (prevRoom) =>
-        prevRoom
+    onError(error, variables, context) {
+      trpcContext.room.getRoom.setData(
+        { roomId },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+        () => (context as any).previousData
+      )
+    },
+    async onMutate(userVote) {
+      await trpcContext.room.getRoom.cancel({ roomId })
+
+      const previousData = trpcContext.room.getRoom.getData({ roomId })
+
+      trpcContext.room.getRoom.setData({ roomId }, (previousRoom) =>
+        previousRoom
           ? {
-              ...prevRoom,
+              ...previousRoom,
               myVote: userVote.vote,
             }
           : undefined
       )
+
+      return { previousData }
     },
   })
   const { mutate: finishVoting } = trpc.room.finishVoting.useMutation()

@@ -13,12 +13,25 @@ type RoomListProps = {
 export function RoomList({ rooms }: RoomListProps) {
   const trpcContext = trpc.useContext()
   const { mutate: deleteRoom } = trpc.room.deleteRoom.useMutation({
-    onMutate({ roomId }) {
-      trpcContext.room.getRooms.setData(undefined, (prevRooms) =>
-        prevRooms ? prevRooms.filter((room) => room.roomId !== roomId) : undefined
+    onError(error, variables, context) {
+      trpcContext.room.getRooms.setData(
+        undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+        () => (context as any).previousData
       )
     },
-    onSuccess() {
+    async onMutate({ roomId }) {
+      await trpcContext.room.getRooms.cancel()
+
+      const previousData = trpcContext.room.getRooms.getData()
+
+      trpcContext.room.getRooms.setData(undefined, (previousRooms) =>
+        previousRooms ? previousRooms.filter((room) => room.roomId !== roomId) : undefined
+      )
+
+      return { previousData }
+    },
+    onSettled() {
       void trpcContext.room.getRooms.invalidate()
     },
   })

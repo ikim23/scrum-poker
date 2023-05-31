@@ -11,13 +11,26 @@ export default function Rooms() {
   const trpcContext = trpc.useContext()
   const rooms = trpc.room.getRooms.useQuery()
   const createRoom = trpc.room.createRoom.useMutation({
-    onMutate({ name }) {
-      setRoomName('')
-      trpcContext.room.getRooms.setData(undefined, (prevRooms) =>
-        prevRooms ? [...prevRooms, { name, roomId: `${TEMP_PREFIX}-${Date.now()}` }] : undefined
+    onError(error, variables, context) {
+      trpcContext.room.getRooms.setData(
+        undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+        () => (context as any).previousData
       )
     },
-    onSuccess() {
+    async onMutate({ name }) {
+      await trpcContext.room.getRooms.cancel()
+
+      const previousData = trpcContext.room.getRooms.getData()
+
+      setRoomName('')
+      trpcContext.room.getRooms.setData(undefined, (previousRooms) =>
+        previousRooms ? [...previousRooms, { name, roomId: `${TEMP_PREFIX}-${Date.now()}` }] : undefined
+      )
+
+      return { previousData }
+    },
+    onSettled() {
       void trpcContext.room.getRooms.invalidate()
     },
   })
