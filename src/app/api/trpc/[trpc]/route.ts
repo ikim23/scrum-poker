@@ -1,4 +1,3 @@
-import { captureException } from '@sentry/nextjs'
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 
 import { createContext } from '~/server/api/createContext'
@@ -10,7 +9,6 @@ function handler(req: Request) {
     endpoint: '/api/trpc',
     onError: ({ error }) => {
       console.log(error)
-      captureException(error)
     },
     req,
     router: appRouter,
