@@ -1,16 +1,17 @@
+'use client'
 import classNames from 'classnames'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
+import { useParams } from 'next/navigation'
 import { FiCheck } from 'react-icons/fi'
 
-import { Button } from '~/components/Button/Button'
-import { Card } from '~/components/Card/Card'
-import { Center } from '~/components/Center/Center'
-import { Layout } from '~/components/Layout/Layout'
-import { Spinner } from '~/components/Spinner/Spinner'
+import { Button } from '~/components/Button'
+import { Center } from '~/components/Center'
+import { Spinner } from '~/components/Spinner'
 import { ALLOWED_VOTES } from '~/core/Vote'
 import { useRoom } from '~/hooks/useRoom'
 import { trpc } from '~/utils/trpc'
+
+import { Card } from './Card'
 
 type RoomProps = {
   roomId: string
@@ -30,7 +31,7 @@ function Room({ roomId }: RoomProps) {
   const { isOwner, myVote, name, result, users } = room
 
   return (
-    <Layout>
+    <>
       <div className="flex flex-wrap justify-between gap-4">
         <div>
           <h2 className="mb-4 text-3xl">{name}</h2>
@@ -95,13 +96,13 @@ function Room({ roomId }: RoomProps) {
           )}
         </div>
       </div>
-    </Layout>
+    </>
   )
 }
 
 export default function RoomWrapper() {
-  const router = useRouter()
-  const roomId = router.query.roomId as string
+  const params = useParams()
+  const roomId = params.roomId as string
   const isValidRoomId = typeof roomId === 'string' && /^[\w-]{21}$/.test(roomId)
 
   const { isError, isLoading } = trpc.room.getRoom.useQuery(
@@ -114,24 +115,20 @@ export default function RoomWrapper() {
 
   if (!isValidRoomId || isError) {
     return (
-      <Layout>
-        <Center>
-          <h2 className="mb-8 text-4xl">Room does not exist</h2>
-          <Link href="/rooms">
-            <Button>Go back to your Rooms</Button>
-          </Link>
-        </Center>
-      </Layout>
+      <Center>
+        <h2 className="mb-8 text-4xl">Room does not exist</h2>
+        <Link href="/rooms">
+          <Button>Go back to your Rooms</Button>
+        </Link>
+      </Center>
     )
   }
 
   if (isLoading) {
     return (
-      <Layout>
-        <Center>
-          <Spinner size="lg" />
-        </Center>
-      </Layout>
+      <Center>
+        <Spinner size="lg" />
+      </Center>
     )
   }
 

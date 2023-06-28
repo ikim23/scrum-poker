@@ -1,10 +1,11 @@
+'use client'
 import { useState } from 'react'
 
-import { Button } from '~/components/Button/Button'
-import { Layout } from '~/components/Layout/Layout'
-import { RoomList, TEMP_PREFIX } from '~/components/RoomList/RoomList'
-import { Spinner } from '~/components/Spinner/Spinner'
+import { Button } from '~/components/Button'
+import { Spinner } from '~/components/Spinner'
 import { trpc } from '~/utils/trpc'
+
+import { RoomList, TEMP_PREFIX } from './RoomList'
 
 export default function Rooms() {
   const [roomName, setRoomName] = useState('')
@@ -36,7 +37,7 @@ export default function Rooms() {
   })
 
   return (
-    <Layout>
+    <>
       <h1 className="mb-4 text-3xl">Your Rooms</h1>
       <form
         onSubmit={(event) => {
@@ -60,6 +61,6 @@ export default function Rooms() {
       </form>
       {rooms.isLoading && <Spinner />}
       {rooms.isSuccess && <RoomList rooms={rooms.data} />}
-    </Layout>
+    </>
   )
 }

@@ -1,6 +1,6 @@
 import classNames from 'classnames'
 
-import { Button } from '~/components/Button/Button'
+import { Button } from '~/components/Button'
 
 type CardProps = {
   isChecked?: boolean
