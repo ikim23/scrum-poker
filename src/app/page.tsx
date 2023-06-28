@@ -1,6 +1,6 @@
 import { SignIn } from '@clerk/nextjs'
 
-import { Center } from '~/components/Center/Center'
+import { Center } from '~/components/Center'
 import { Routes } from '~/routes'
 
 export default function HomePage() {
